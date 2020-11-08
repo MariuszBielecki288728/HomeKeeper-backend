@@ -48,4 +48,12 @@ jobs:
     - name: Run migrations
       run: python manage.py migrate
     - name: Run tests
-      run: python manage.py test
+      run: coverage manage.py test -v 2
+    - name: Generate coverage xml report
+      run: coverage xml
+    - name: Upload coverage to codecov.io
+        uses: codecov/codecov-action@v1.0.14
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
