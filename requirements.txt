@@ -1,4 +1,4 @@
-Django~=3.0.3
+Django~=3.1.0
 Django-filter~=2.4.0
 django-graphql-jwt~=0.3.1
 graphene-django~=2.13.0
