@@ -1,0 +1,13 @@
+[run]
+omit =
+   */node_modules/*
+   manage.py
+   homekeeper/asgi.py
+   homekeeper/wsgi.py
+   homekeeper/settings.py
+source = .
+branch = True
+
+[report]
+fail_under = 90
+show_missing = True
