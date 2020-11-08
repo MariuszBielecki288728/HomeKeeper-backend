@@ -48,7 +48,7 @@ jobs:
     - name: Run migrations
       run: python manage.py migrate
     - name: Run tests
-      run: coverage manage.py test -v 2
+      run: coverage run manage.py test -v 2
     - name: Generate coverage xml report
       run: coverage xml
     - name: Upload coverage to codecov.io
