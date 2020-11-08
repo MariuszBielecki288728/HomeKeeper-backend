@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 
 import graphene
 from graphene_django import DjangoObjectType
+from graphql_jwt.decorators import login_required
 
 
 class UserType(DjangoObjectType):
@@ -28,11 +29,16 @@ class CreateUser(graphene.Mutation):
         return CreateUser(user=user)
 
 
-class Query(graphene.ObjectType):
+class Query(graphene.AbstractType):
+    me = graphene.Field(UserType)
     users = graphene.List(UserType)
 
     def resolve_users(self, info):
         return get_user_model().objects.all()
+
+    @login_required
+    def resolve_me(self, info):
+        return info.context.user
 
 
 class Mutation(graphene.ObjectType):
