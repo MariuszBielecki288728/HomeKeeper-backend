@@ -52,6 +52,7 @@ jobs:
     - name: Generate coverage xml report
       run: coverage xml
     - name: Upload coverage to codecov.io
+      if: ${{ always() }}
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
