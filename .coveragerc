@@ -1,6 +1,8 @@
 [run]
 omit =
    */node_modules/*
+   *__init__*
+   *apps.py*
    manage.py
    homekeeper/asgi.py
    homekeeper/wsgi.py
