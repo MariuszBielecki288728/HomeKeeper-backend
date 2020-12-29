@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "graphene_django",
     "coverage",
+    "teams",
+    "tasks",
+    "common",
 ]
 
 MIDDLEWARE = [
