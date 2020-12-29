@@ -142,6 +142,7 @@ GRAPHENE = {
     "MIDDLEWARE": [
         "graphql_jwt.middleware.JSONWebTokenMiddleware",
     ],
+    "ATOMIC_MUTATIONS": True,
 }
 
 AUTHENTICATION_BACKENDS = [
