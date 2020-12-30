@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from users.forms import RegisterForm
 
 import graphene
+from graphene_django.forms.mutation import DjangoFormMutation
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
@@ -10,23 +12,14 @@ class UserType(DjangoObjectType):
         model = get_user_model()
 
 
-class CreateUser(graphene.Mutation):
-    user = graphene.Field(UserType)
+class Register(DjangoFormMutation):
+    class Meta:
+        form_class = RegisterForm
 
-    class Arguments:
-        username = graphene.String(required=True)
-        password = graphene.String(required=True)
-        email = graphene.String(required=True)
-
-    def mutate(self, info, username, password, email):
-        user = get_user_model()(
-            username=username,
-            email=email,
-        )
-        user.set_password(password)
-        user.save()
-
-        return CreateUser(user=user)
+    # @classmethod
+    # @login_required
+    # def mutate(cls, *args, **kwargs):
+    #     super().mutate(*args, **kwargs)
 
 
 class Query(graphene.AbstractType):
@@ -42,4 +35,4 @@ class Query(graphene.AbstractType):
 
 
 class Mutation(graphene.ObjectType):
-    create_user = CreateUser.Field()
+    register = Register.Field()

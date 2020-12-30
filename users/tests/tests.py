@@ -4,6 +4,8 @@ from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth.models import User
 from graphql_jwt.testcases import JSONWebTokenTestCase
 
+from .queries import REGISTER_MUTATION
+
 
 class UserTestCase(GraphQLTestCase, JSONWebTokenTestCase):
     def setUp(self):
@@ -42,3 +44,21 @@ class UserTestCase(GraphQLTestCase, JSONWebTokenTestCase):
 
         response = self.client.execute(query)
         self.assertIsNone(response.errors)
+
+    def test_register(self):
+        query = REGISTER_MUTATION.format(
+            username="Agatka", password="nieszczycielskiehaslo", email="puci@puci.puci"
+        )
+        response = self.client.execute(query)
+        assert len(response.data["register"]["errors"]) == 0
+        assert response.data["register"]["username"] == "Agatka"
+
+    def test_register_is_validated(self):
+        query = REGISTER_MUTATION.format(
+            username="Agatka", password="weak", email="puci@puci.puci"
+        )
+        response = self.client.execute(query)
+        assert (
+            "This password is too short"
+            in response.data["register"]["errors"][0]["messages"][0]
+        )
