@@ -110,17 +110,17 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
     def test_team_leave_without_argument(self):
         """John should leave random team"""
         query = """
-        mutation {{
-            leaveTeam {{
-                team {{
+        mutation {
+            leaveTeam {
+                team {
                     id
                     name
-                    members {{
+                    members {
                         username
-                    }}
-                }}
-            }}
-        }}
+                    }
+                }
+            }
+        }
         """
         response = self.client.execute(query)
         team = Team.objects.get(pk=response.data["leaveTeam"]["team"]["id"])
