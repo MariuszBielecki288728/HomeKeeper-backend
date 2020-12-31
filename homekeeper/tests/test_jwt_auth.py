@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 
 
-class UserTestCase(TestCase):
+class JWTTestCase(TestCase):
     def setUp(self):
         self.user_name = "john"
         self.user_password = "johnpassword"

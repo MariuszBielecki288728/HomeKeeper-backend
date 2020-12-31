@@ -44,6 +44,7 @@ class UserTestCase(GraphQLTestCase, JSONWebTokenTestCase):
 
         response = self.client.execute(query)
         self.assertIsNone(response.errors)
+        response.data["me"]["username"] == "john"
 
     def test_register(self):
         query = REGISTER_MUTATION.format(

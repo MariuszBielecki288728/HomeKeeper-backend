@@ -9,7 +9,7 @@ class TrackingFieldsMixin(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
     )
     modified_at = models.DateTimeField(auto_now=True)
-    deleted_at = models.DateTimeField()
+    deleted_at = models.DateTimeField(null=True, default=None)
 
     @property
     def active(self):

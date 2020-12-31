@@ -2,13 +2,15 @@ import graphene
 import graphql_jwt
 
 from users import schema as users_schema
+from teams import schema as teams_schema
 
 
-class Query(users_schema.Query, graphene.ObjectType):
+class Query(teams_schema.Query, users_schema.Query, graphene.ObjectType):
     pass
 
 
 class Mutation(
+    teams_schema.Mutation,
     users_schema.Mutation,
     graphene.ObjectType,
 ):
