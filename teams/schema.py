@@ -84,7 +84,7 @@ class Query(graphene.AbstractType):
 
     @login_required
     def resolve_my_teams(self, info):
-        raise Team.objects.filter(members=info.context.user)
+        return Team.objects.filter(members=info.context.user)
 
 
 class Mutation(graphene.ObjectType):
