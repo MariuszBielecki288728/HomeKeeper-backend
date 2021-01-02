@@ -55,6 +55,7 @@ jobs:
       run: python manage.py dumpschema
     - name: Upload schema
       uses: actions/upload-artifact@v2
+      with:
         name: schema
         path: schema.graphql
 
