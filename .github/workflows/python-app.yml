@@ -47,8 +47,17 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --statistics
     - name: Run migrations
       run: python manage.py migrate
+
     - name: Run tests
       run: coverage run manage.py test -v 2
+
+    - name: Generate GraphQL SDL file
+      run: python manage.py dumpschema
+    - name: Upload schema
+      uses: actions/upload-artifact@v2
+        name: schema
+        path: schema.graphql
+
     - name: Generate coverage xml report
       run: coverage xml
     - name: Upload coverage to codecov.io
