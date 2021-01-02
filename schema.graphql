@@ -1,0 +1,108 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+input CreateTeamInput {
+  name: String!
+  id: ID
+  clientMutationId: String
+}
+
+type CreateTeamPayload {
+  team: TeamType
+  errors: [ErrorType]
+  clientMutationId: String
+}
+
+scalar DateTime
+
+type ErrorType {
+  field: String!
+  messages: [String!]!
+}
+
+scalar GenericScalar
+
+type JoinTeam {
+  team: TeamType
+}
+
+type LeaveTeam {
+  team: TeamType
+}
+
+type Mutation {
+  register(input: RegisterInput!): RegisterPayload
+  createTeam(input: CreateTeamInput!): CreateTeamPayload
+  joinTeam(teamId: Int): JoinTeam
+  leaveTeam(teamId: Int): LeaveTeam
+  tokenAuth(username: String!, password: String!): ObtainJSONWebToken
+  verifyToken(token: String): Verify
+  refreshToken(token: String): Refresh
+}
+
+type ObtainJSONWebToken {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+type Query {
+  me: UserType
+  users: [UserType]
+  myTeams: [TeamType]
+  teams: [TeamType]
+}
+
+type Refresh {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+input RegisterInput {
+  username: String!
+  password1: String!
+  password2: String!
+  email: String
+  clientMutationId: String
+}
+
+type RegisterPayload {
+  username: String!
+  password1: String!
+  password2: String!
+  email: String
+  errors: [ErrorType]
+  clientMutationId: String
+}
+
+type TeamType {
+  id: ID!
+  createdAt: DateTime!
+  createdBy: UserType
+  modifiedAt: DateTime!
+  deletedAt: DateTime
+  name: String!
+  members: [UserType!]!
+}
+
+type UserType {
+  id: ID!
+  password: String!
+  lastLogin: DateTime
+  isSuperuser: Boolean!
+  username: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  isStaff: Boolean!
+  isActive: Boolean!
+  dateJoined: DateTime!
+  teamSet: [TeamType!]!
+}
+
+type Verify {
+  payload: GenericScalar!
+}
