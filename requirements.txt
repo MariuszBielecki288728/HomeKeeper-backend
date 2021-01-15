@@ -1,6 +1,6 @@
 Django~=3.1.5
 Django-filter~=2.4.0
-PyJWT>=1.5.0,<2  # FIXME Remove when django-graphql-jwt/issues/242 is fixed
+PyJWT>=1.5.0,<3  # FIXME Remove when django-graphql-jwt/issues/242 is fixed
 django-graphql-jwt~=0.3.1
 graphene-django~=2.14.0
 psycopg2~=2.8.6
