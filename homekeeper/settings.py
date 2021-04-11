@@ -26,7 +26,7 @@ SECRET_KEY = "*!4$kbzhe@&89p0vl)@b_e#e*y7hvb0pnj!rri*4@sof%i51c5"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["0.0.0.0", "192.168.1.21", "192.168.1.25", "127.0.0.1"]
 
 
 # Application definition
@@ -149,3 +149,8 @@ AUTHENTICATION_BACKENDS = [
     "graphql_jwt.backends.JSONWebTokenBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
