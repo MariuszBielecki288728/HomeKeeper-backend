@@ -15,22 +15,21 @@ class UserTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.client.authenticate(self.user)
 
     def test_users(self):
-        response = self.query(
-            """
+        query = """
             query {
                 users {
                     id
                     username
                 }
             }
-            """
-        )
+        """
 
-        self.assertResponseNoErrors(response)
+        response = self.client.execute(query)
 
-        content = json.loads(response.content)
-        assert len(content["data"]["users"]) == 1
-        assert content["data"]["users"][0]["username"] == "john"
+        assert not response.errors
+
+        assert len(response.data["users"]) == 1
+        assert response.data["users"][0]["username"] == "john"
 
     def test_auth_me(self):
         query = """

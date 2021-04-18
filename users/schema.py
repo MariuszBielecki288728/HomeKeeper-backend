@@ -22,7 +22,7 @@ class Register(DjangoFormMutation):
     #     super().mutate(*args, **kwargs)
 
 
-class Query(graphene.AbstractType):
+class Query(graphene.ObjectType):
     me = graphene.Field(UserType)
     users = graphene.List(UserType)
 

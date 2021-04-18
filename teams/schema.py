@@ -75,7 +75,7 @@ class LeaveTeam(graphene.Mutation):
         return JoinTeam(team=teams[0])
 
 
-class Query(graphene.AbstractType):
+class Query(graphene.ObjectType):
     my_teams = graphene.List(TeamType)
     teams = graphene.List(TeamType)
 
