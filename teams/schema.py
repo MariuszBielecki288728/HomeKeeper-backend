@@ -11,6 +11,7 @@ from teams.forms import TeamForm
 class TeamType(DjangoObjectType):
     class Meta:
         model = Team
+        exclude = ("password",)
 
 
 class CreateTeam(DjangoModelFormMutation):
@@ -38,14 +39,18 @@ class JoinTeam(graphene.Mutation):
 
     class Arguments:
         team_id = graphene.Int()
+        password = graphene.String()
 
     @login_required
-    def mutate(root, info, team_id):
+    def mutate(root, info, team_id, password):
         team = Team.objects.get(pk=team_id)
         user = info.context.user
 
+        # TODO move this checks to Form (clean method?)
         if team.members.filter(pk=user.id):
             raise GraphQLError(f"You are already member of {team.name}")
+        if not team.check_password(password):
+            raise GraphQLError(f"Wrong password for {team.name}")
 
         team.members.add(user)
         return JoinTeam(team=team)
