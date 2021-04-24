@@ -23,7 +23,7 @@ class Team(TrackingFieldsMixin):
     # https://docs.djangoproject.com/en/3.2/topics/db/models/#extra-fields-on-many-to-many-relationships
     members = models.ManyToManyField(settings.AUTH_USER_MODEL)
     password = models.CharField(
-        max_length=50, help_text="Password used to join the team"
+        max_length=128, help_text="Password used to join the team"
     )
     objects = TeamManager()
 
