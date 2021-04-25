@@ -22,10 +22,13 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
 
     def test_create_team(self):
         team_name = "Puciciele"
+        password = "passwd"
+
         query = f"""
             mutation {{
                 createTeam (input: {{
-                    name: "{team_name}"
+                    name: "{team_name}",
+                    password: "{password}"
                 }}){{
                     team {{
                     id
@@ -41,6 +44,9 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         response = self.client.execute(query)
         assert response.data["createTeam"]["team"]["name"] == team_name
         assert response.data["createTeam"]["team"]["createdBy"]["username"] == "john"
+        t = Team.objects.get(name=team_name)
+        assert t.check_password(password)
+        assert not t.check_password("not_a_password")
 
     def test_teams(self):
 
@@ -71,10 +77,12 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
 
     def test_team_join(self):
         team = Team(name="Test")
+        password = "passwd"
+        team.set_password(password)
         team.save()
         query = f"""
         mutation {{
-            joinTeam (teamId: {team.id}) {{
+            joinTeam (teamId: {team.id}, password: "{password}") {{
                 team {{
                     id
                     name
@@ -88,6 +96,28 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         response = self.client.execute(query)
         assert response.data["joinTeam"]["team"]["name"] == "Test"
         assert self.user in team.members.all()
+
+    def test_team_join_invalid_password(self):
+        team = Team(name="Test")
+        team.set_password("passwd")
+        team.save()
+        query = f"""
+        mutation {{
+            joinTeam (teamId: {team.id}, password: "not_a_password") {{
+                team {{
+                    id
+                    name
+                    members {{
+                        username
+                    }}
+                }}
+            }}
+        }}
+        """
+        response = self.client.execute(query)
+        assert response.errors
+        assert response.errors[0].message == "Wrong password for Test"
+        assert self.user not in team.members.all()
 
     def test_team_leave(self):
         query = f"""
