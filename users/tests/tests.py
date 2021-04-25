@@ -1,5 +1,3 @@
-import json
-
 from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth.models import User
 from graphql_jwt.testcases import JSONWebTokenTestCase
