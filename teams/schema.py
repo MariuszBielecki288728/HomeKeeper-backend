@@ -6,6 +6,7 @@ from graphql import GraphQLError
 
 from teams.models import Team
 from teams.forms import TeamForm
+from users.schema import UserType
 
 
 class TeamType(DjangoObjectType):
@@ -83,6 +84,10 @@ class LeaveTeam(graphene.Mutation):
 class Query(graphene.ObjectType):
     my_teams = graphene.List(TeamType)
     teams = graphene.List(TeamType)
+    team_members = graphene.Field(
+        graphene.List(UserType),
+        team_id=graphene.Int(),
+    )
 
     def resolve_teams(self, info):
         return Team.objects.all()
@@ -90,6 +95,18 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_my_teams(self, info):
         return Team.objects.filter(members=info.context.user)
+
+    @login_required
+    def resolve_team_members(self, info, team_id=None):
+        if team_id:
+            team = Team.objects.get(id=team_id)
+            if not team or not team.members.filter(id=info.context.user.id):
+                raise GraphQLError(
+                    "You are not a member of the team or the given team does not exist."
+                )
+            return team.members.all()
+        else:
+            return Team.objects.filter(members=info.context.user).first().members.all()
 
 
 class Mutation(graphene.ObjectType):

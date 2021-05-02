@@ -10,11 +10,15 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.user = get_user_model().objects.create_user(
             "john", "lennon@thebeatles.com", "johnpassworddfasdf"
         )
+        self.member = get_user_model().objects.create_user(
+            "Dan", "dd@ggl.com", "danpasswd"
+        )
         self.client.authenticate(self.user)
 
         self.team = Team(name="Amebki")
         self.team.save()
         self.team.members.add(self.user)
+        self.team.members.add(self.member)
 
         for i in range(5):
             t = Team(name=str(i))
@@ -74,6 +78,50 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             """
         response = self.client.execute(query)
         assert response.data["myTeams"][0]["name"] == "Amebki"
+
+    def test_team_members_default(self):
+        query = """
+            query {
+                teamMembers {
+                    username
+                }
+            }
+            """
+        response = self.client.execute(query)
+        self.assertEqual(response.data["teamMembers"][0]["username"], "john")
+        self.assertEqual(response.data["teamMembers"][1]["username"], "Dan")
+
+    def test_team_members_by_team_id(self):
+        team = Team.objects.create_team("TeamSingle", "pass")
+        team.members.add(self.user)
+        team.save()
+
+        query = f"""
+            query {{
+                teamMembers (teamId: {team.id}) {{
+                    username
+                }}
+            }}
+            """
+        response = self.client.execute(query)
+        self.assertEqual(response.data["teamMembers"][0]["username"], "john")
+        self.assertEqual(len(response.data["teamMembers"]), 1)
+
+    def test_team_members_by_wrong_team_id(self):
+        team = Team.objects.create_team("TeamEmpty", "pass")
+
+        query = f"""
+            query {{
+                teamMembers (teamId: {team.id}) {{
+                    username
+                }}
+            }}
+            """
+        response = self.client.execute(query)
+        self.assertEqual(
+            response.errors[0].message,
+            "You are not a member of the team or the given team does not exist.",
+        )
 
     def test_team_join(self):
         team = Team(name="Test")
