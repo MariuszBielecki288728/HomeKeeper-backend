@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from teams.models import Team
 from common.models import TrackingFieldsMixin
@@ -6,11 +7,36 @@ from django.core.validators import MinValueValidator
 
 
 class Task(TrackingFieldsMixin):
-    name = models.CharField(max_length=50)
-    description = models.CharField(max_length=300)
+    """Data model representing task, includes description of the task."""
 
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=500)
+
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
 
     base_points_prize = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     refresh_interval = models.DurationField()
     is_reoccuring = models.BooleanField()
+
+
+class TaskInstance(TrackingFieldsMixin):
+    """
+    Data model representing instance of a task, includes reference to the task.
+    Since tasks may be reoccuring, this model is a representation of occurence.
+    """
+
+    task = models.ForeignKey(Task, on_delete=models.PROTECT)
+
+    def calculate_prize(self):
+        return self.task.base_points_prize
+
+
+class TaskInstanceCompletion(TrackingFieldsMixin):
+    """
+    Data model represents the event of user completing the task.
+    """
+
+    task_instance = models.ForeignKey(TaskInstance, on_delete=models.PROTECT)
+    user_who_completed_task = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT
+    )
