@@ -3,15 +3,19 @@ import graphql_jwt
 
 from users import schema as users_schema
 from teams import schema as teams_schema
+from tasks import schema as tasks_schema
 
 
-class Query(teams_schema.Query, users_schema.Query, graphene.ObjectType):
+class Query(
+    teams_schema.Query, users_schema.Query, tasks_schema.Query, graphene.ObjectType
+):
     pass
 
 
 class Mutation(
     teams_schema.Mutation,
     users_schema.Mutation,
+    tasks_schema.Mutation,
     graphene.ObjectType,
 ):
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
