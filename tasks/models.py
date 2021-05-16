@@ -10,13 +10,13 @@ class Task(TrackingFieldsMixin):
     """Data model representing task, includes description of the task."""
 
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=500)
+    description = models.CharField(max_length=500, blank=True)
 
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
 
     base_points_prize = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    refresh_interval = models.DurationField()
-    is_recurring = models.BooleanField()
+    refresh_interval = models.DurationField(blank=True, null=True)
+    is_recurring = models.BooleanField(default=False)
 
 
 class TaskInstance(TrackingFieldsMixin):
