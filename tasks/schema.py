@@ -3,8 +3,6 @@ import graphene
 from graphene_django.forms.mutation import DjangoModelFormMutation
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
-from graphql import GraphQLError
-
 
 from tasks.forms import TaskCreationForm
 from tasks.models import Task
@@ -17,7 +15,7 @@ class TaskType(DjangoObjectType):
 
 
 class CreateTask(DjangoModelFormMutation):
-    pet = graphene.Field(TaskType)
+    task = graphene.Field(TaskType)
 
     class Meta:
         form_class = TaskCreationForm
