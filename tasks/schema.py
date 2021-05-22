@@ -2,10 +2,13 @@ import graphene
 
 from graphene_django.forms.mutation import DjangoModelFormMutation
 from graphene_django import DjangoObjectType
+from graphql.error.graphql_error import GraphQLError
 from graphql_jwt.decorators import login_required
 
 from tasks.forms import TaskCreationForm
 from tasks.models import Task
+
+from teams.models import Team
 
 
 class TaskType(DjangoObjectType):
@@ -23,6 +26,9 @@ class CreateTask(DjangoModelFormMutation):
     @classmethod
     @login_required
     def mutate(cls, root, info, input):
+        team = Team.objects.get(pk=input.team)
+        if not team.members.filter(id=info.context.user.id).exists():
+            raise GraphQLError("Only members of the given team may create tasks")
         return super().mutate(root, info, input)
 
     @classmethod
