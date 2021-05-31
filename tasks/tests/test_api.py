@@ -1,5 +1,6 @@
 import datetime
 import pytz
+from parameterized import parameterized
 from unittest import mock
 
 from graphene_django.utils.testing import GraphQLTestCase
@@ -7,7 +8,7 @@ from django.contrib.auth import get_user_model
 from graphql_jwt.testcases import JSONWebTokenTestCase
 
 from teams.models import Team
-from tasks.models import TaskInstance
+from tasks.models import TaskInstance, Task
 
 
 def create_task_query(name, team_id, base_prize=10):
@@ -66,6 +67,14 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.team.members.add(self.user)
         self.team.members.add(self.member)
 
+        self.tasks = [
+            Task(name="1", team=self.team, base_points_prize=10),
+            Task(name="2", team=self.team, base_points_prize=10),
+            Task(name="3", team=self.team, base_points_prize=10),
+        ]
+        for t in self.tasks:
+            t.save()
+
     def test_create_task(self):
         name = "Clean the bathroom"
         team_id = self.team.id
@@ -99,4 +108,71 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertEqual(
             response.errors[0].message,
             "Only members of the given team may create tasks",
+        )
+
+    @parameterized.expand(["true", "false"])
+    def test_tasks_query(self, only_active):
+        query = f"""query {{
+            tasks(teamId: {self.team.id}, onlyActive: {only_active}){{
+                id
+                name
+                description
+                team {{
+                    id
+                    name
+                }}
+            }}
+        }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertEqual(len(response.data["tasks"]), 3)
+        self.assertEqual(response.data["tasks"][1]["name"], self.tasks[1].name)
+        self.assertEqual(
+            response.data["tasks"][1]["team"]["id"], str(self.tasks[1].team.id)
+        )
+
+    def test_task_instances_query(self):
+        query = f"""query {{
+            taskInstances(teamId: {self.team.id}) {{
+                id
+                task {{
+                    name
+                    team {{
+                        id
+                    }}
+                }}
+            }}
+        }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertEqual(len(response.data["taskInstances"]), 3)
+        self.assertEqual(
+            response.data["taskInstances"][1]["task"]["name"], self.tasks[1].name
+        )
+        self.assertEqual(
+            response.data["taskInstances"][1]["task"]["team"]["id"],
+            str(self.tasks[1].team.id),
+        )
+
+    def test_related_task_instances(self):
+        query = f"""query {{
+            relatedTaskInstances(taskId: {self.tasks[2].id}) {{
+                id
+                task {{
+                    name
+                    team {{
+                        id
+                    }}
+                }}
+            }}
+        }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertEqual(len(response.data["relatedTaskInstances"]), 1)
+        self.assertEqual(
+            response.data["relatedTaskInstances"][0]["task"]["name"], self.tasks[2].name
+        )
+        self.assertEqual(
+            response.data["relatedTaskInstances"][0]["task"]["team"]["id"],
+            str(self.tasks[2].team.id),
         )

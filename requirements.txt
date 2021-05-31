@@ -4,4 +4,5 @@ django-graphql-jwt~=0.3.2
 graphene-django~=3.0.0b7
 
 psycopg2~=2.8.6
+parameterized~=0.8.1
 coverage~=5.5

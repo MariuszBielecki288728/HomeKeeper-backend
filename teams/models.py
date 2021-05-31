@@ -40,3 +40,9 @@ class Team(TrackingFieldsMixin):
         Returns True if the given raw string is the correct password for the user.
         """
         return hashers.check_password(raw_password, self.password)
+
+    @staticmethod
+    def check_membership(user, team_id):
+        team = Team.objects.get(pk=team_id)
+        if not team.members.filter(id=user.id).exists():
+            raise ValueError("User is not a member of given team")

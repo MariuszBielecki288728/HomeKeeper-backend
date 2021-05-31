@@ -1,9 +1,10 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils.timezone import now
+
 from teams.models import Team
 from common.models import TrackingFieldsMixin
-
-from django.core.validators import MinValueValidator
 
 
 class Task(TrackingFieldsMixin):
@@ -18,6 +19,20 @@ class Task(TrackingFieldsMixin):
     refresh_interval = models.DurationField(blank=True, null=True)
     is_recurring = models.BooleanField(default=False)
 
+    @property
+    def active(self) -> bool:
+        """
+        The Task is active when:
+            it is not deleted
+            there is at least one task instance that is active
+        """
+        return super().active and any(
+            ti.active
+            for ti in TaskInstance.objects.filter(
+                task=self.id,
+            ).all()
+        )
+
 
 class TaskInstance(TrackingFieldsMixin):
     """
@@ -27,8 +42,19 @@ class TaskInstance(TrackingFieldsMixin):
 
     task = models.ForeignKey(Task, on_delete=models.PROTECT)
     active_from = models.DateTimeField()
+    completed = models.BooleanField(default=False)
 
-    def calculate_prize(self):
+    @property
+    def active(self) -> bool:
+        """
+        The TaskInstance is active when:
+            it is not deleted
+            and is not completed
+            and the current date is after the active_from field value
+        """
+        return self.completed is False and self.active_from <= now() and super().active
+
+    def calculate_prize(self) -> int:
         return self.task.base_points_prize
 
 
