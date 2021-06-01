@@ -13,9 +13,20 @@ from teams.models import Team
 
 
 class TaskType(DjangoObjectType):
+    active = graphene.Field(graphene.Boolean())
+
     class Meta:
         model = Task
-        fields = "__all__"
+        fields = (
+            "id",
+            "name",
+            "description",
+            "team",
+            "base_points_prize",
+            "refresh_interval",
+            "is_recurring",
+            "active",
+        )
 
 
 class TaskInstanceType(DjangoObjectType):
@@ -67,25 +78,27 @@ class RevertTaskCompletion:
 
 class Query(graphene.ObjectType):
     tasks = graphene.Field(
-        graphene.List(TaskType), team_id=graphene.Int(), only_active=graphene.Boolean()
+        graphene.List(TaskType),
+        team_id=graphene.Int(required=True),
+        only_active=graphene.Boolean(default_value=False),
     )
     task_instances = graphene.Field(
         graphene.List(TaskInstanceType),
-        team_id=graphene.Int(),
-        only_active=graphene.Boolean(),
+        team_id=graphene.Int(required=True),
+        only_active=graphene.Boolean(default_value=False),
     )
     related_task_instances = graphene.Field(
         graphene.List(TaskInstanceType),
-        task_id=graphene.Int(),
-        only_active=graphene.Boolean(),
+        task_id=graphene.Int(required=True),
+        only_active=graphene.Boolean(default_value=False),
     )
     completions = graphene.Field(
         graphene.List(TaskInstanceCompletionType),
-        team_id=graphene.Int(),
+        team_id=graphene.Int(required=True),
     )
     user_points = graphene.Field(
         graphene.Int(),
-        team_id=graphene.Int(),
+        team_id=graphene.Int(required=True),
     )
 
     @login_required
@@ -94,10 +107,7 @@ class Query(graphene.ObjectType):
     ):
         Team.check_membership(info.context.user, team_id)
         tasks = Task.objects.filter(team=team_id)
-        if only_active is True:
-            return [t for t in tasks.all() if t.active]
-        else:
-            return tasks
+        return [t for t in tasks.all() if t.active] if only_active else tasks
 
     @login_required
     def resolve_task_instances(
@@ -105,20 +115,22 @@ class Query(graphene.ObjectType):
     ):
         Team.check_membership(info.context.user, team_id)
         task_instances = TaskInstance.objects.filter(task__team=team_id)
-        if only_active is True:
-            return [t for t in task_instances.all() if t.active]
-        else:
-            return task_instances
+        return (
+            [t for t in task_instances.all() if t.active]
+            if only_active
+            else task_instances
+        )
 
     @login_required
     def resolve_related_task_instances(
         self, info: GraphQLResolveInfo, task_id: int, only_active: bool = False
     ):
         task_instances = TaskInstance.objects.filter(task=task_id)
-        if only_active is True:
-            return [t for t in task_instances.all() if t.active]
-        else:
-            return task_instances
+        return (
+            [t for t in task_instances.all() if t.active]
+            if only_active
+            else task_instances
+        )
 
 
 class Mutation(graphene.ObjectType):

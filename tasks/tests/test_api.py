@@ -131,9 +131,10 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             response.data["tasks"][1]["team"]["id"], str(self.tasks[1].team.id)
         )
 
-    def test_task_instances_query(self):
+    @parameterized.expand(["true", "false"])
+    def test_task_instances_query(self, only_active):
         query = f"""query {{
-            taskInstances(teamId: {self.team.id}) {{
+            taskInstances(teamId: {self.team.id}, onlyActive: {only_active}) {{
                 id
                 task {{
                     name
@@ -154,9 +155,10 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             str(self.tasks[1].team.id),
         )
 
-    def test_related_task_instances(self):
+    @parameterized.expand(["true", "false"])
+    def test_related_task_instances(self, only_active):
         query = f"""query {{
-            relatedTaskInstances(taskId: {self.tasks[2].id}) {{
+            relatedTaskInstances(taskId: {self.tasks[2].id}, onlyActive: {only_active}) {{
                 id
                 task {{
                     name
