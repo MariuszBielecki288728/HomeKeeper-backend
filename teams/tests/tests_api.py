@@ -51,6 +51,7 @@ class TeamTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         t = Team.objects.get(name=team_name)
         assert t.check_password(password)
         assert not t.check_password("not_a_password")
+        assert self.user in t.members.all()
 
     def test_teams(self):
 
