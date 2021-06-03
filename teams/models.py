@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from common.models import TrackingFieldsMixin
 from django.contrib.auth import hashers
+from django.core.validators import MinLengthValidator
 
 
 class TeamManager(models.Manager):
@@ -18,7 +19,7 @@ class TeamManager(models.Manager):
 
 
 class Team(TrackingFieldsMixin):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, validators=[MinLengthValidator(1)])
     # TODO
     # https://docs.djangoproject.com/en/3.2/topics/db/models/#extra-fields-on-many-to-many-relationships
     members = models.ManyToManyField(settings.AUTH_USER_MODEL)

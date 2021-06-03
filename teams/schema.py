@@ -30,6 +30,7 @@ class CreateTeam(DjangoModelFormMutation):
     def perform_mutate(cls, form, info):
         obj = form.save()
         obj.created_by = info.context.user
+        obj.members.add(info.context.user)
         obj.save()
         kwargs = {cls._meta.return_field_name: obj}
         return cls(errors=[], **kwargs)
