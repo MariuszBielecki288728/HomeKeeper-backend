@@ -8,11 +8,13 @@ from graphql_jwt.decorators import login_required
 
 from tasks.forms import TaskCreationForm, TaskInstanceCompletionForm
 from tasks.models import Task, TaskInstance, TaskInstanceCompletion
+from tasks.scalars import Duration
 
 from teams.models import Team
 
 
 class TaskType(DjangoObjectType):
+    refresh_interval = graphene.Field(Duration)
     active = graphene.Field(graphene.Boolean())
 
     class Meta:

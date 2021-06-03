@@ -11,13 +11,15 @@ from teams.models import Team
 from tasks.models import TaskInstance, Task
 
 
-def create_task_query(name, team_id, base_prize=10):
+def create_task_query(name, team_id, base_prize=10, interval=None):
     return f"""
         mutation {{
             createTask (input: {{
-                name: "{name}",
+                name: "{name}"
                 team: "{team_id}"
                 basePointsPrize: {str(base_prize)}
+                {"isRecurring: true" if interval else ""}
+                {f'refreshInterval: "{interval}"' if interval else ""}
             }}) {{
                 errors {{
                 field
@@ -82,6 +84,29 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertEqual(
             self.team.id, int(response.data["createTask"]["task"]["team"]["id"])
         )
+        task_instance = TaskInstance.objects.filter(
+            task_id=response.data["createTask"]["task"]["id"]
+        ).first()
+
+        self.assertEqual(task_instance.active_from, mocked)
+
+    def test_create_task_with_interval(self):
+        name = "Clean the bathroom"
+        team_id = self.team.id
+        query = create_task_query(name, team_id, interval="P7D")
+        mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+            response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertFalse(response.data["createTask"]["errors"])
+        self.assertEqual(name, response.data["createTask"]["task"]["name"])
+        self.assertEqual(
+            self.team.id, int(response.data["createTask"]["task"]["team"]["id"])
+        )
+        self.assertEqual(
+            "7 days, 0:00:00", response.data["createTask"]["task"]["refreshInterval"]
+        )
+        self.assertTrue(response.data["createTask"]["task"]["isRecurring"])
         task_instance = TaskInstance.objects.filter(
             task_id=response.data["createTask"]["task"]["id"]
         ).first()
@@ -205,7 +230,55 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             ]["id"],
             str(task_instance.id),
         )
-        task_instances = TaskInstance.objects.filter(task=self.tasks[0])
-        self.assertEqual(len(list(task_instances.all())), 1)
+        task_instances = TaskInstance.objects.filter(
+            task=self.tasks[0], completed=False
+        )
+        self.assertEqual(len(list(task_instances.all())), 0)
         self.assertFalse(self.tasks[0].active)
         self.assertTrue(self.tasks[1].active)
+
+    def test_submit_completion_on_recurring_task(self):
+        refresh_interval = datetime.timedelta(days=14)
+        task = Task.objects.create(
+            name="Umyć podłogę",
+            team=self.team,
+            base_points_prize=5,
+            is_recurring=True,
+            refresh_interval=refresh_interval,
+        )
+        task_instance = TaskInstance.objects.filter(task=task).first()
+        query = f""" mutation {{submitTaskInstanceCompletion(input: {{taskInstance: {task_instance.id}}}) {{
+            errors {{
+                field
+                messages
+            }}
+            taskInstanceCompletion {{
+            userWhoCompletedTask {{
+                id
+                username
+            }}
+            taskInstance {{id, task {{id, name}}, activeFrom, completed, active}}
+            }}
+        }} }}"""
+        mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+            response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertFalse(response.data["submitTaskInstanceCompletion"]["errors"])
+        self.assertEqual(
+            response.data["submitTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "userWhoCompletedTask"
+            ]["id"],
+            str(self.user.id),
+        )
+        self.assertEqual(
+            response.data["submitTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "taskInstance"
+            ]["id"],
+            str(task_instance.id),
+        )
+        task_instances = TaskInstance.objects.filter(task=task)
+        self.assertEqual(len(list(task_instances.all())), 2)
+        active_instance = task_instances.filter(completed=False).first()
+        self.assertTrue(active_instance.active)
+        self.assertEqual(mocked + refresh_interval, active_instance.active_from)

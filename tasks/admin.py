@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from tasks.models import Task, TaskInstance, TaskInstanceCompletion
+
+admin.site.register(Task)
+admin.site.register(TaskInstance)
+admin.site.register(TaskInstanceCompletion)
