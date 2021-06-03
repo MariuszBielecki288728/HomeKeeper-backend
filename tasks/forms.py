@@ -1,5 +1,5 @@
 from django import forms
-from tasks.models import Task
+from tasks.models import Task, TaskInstanceCompletion
 
 
 class TaskCreationForm(forms.ModelForm):
@@ -13,3 +13,9 @@ class TaskCreationForm(forms.ModelForm):
             "refresh_interval",
             "is_recurring",
         ]
+
+
+class TaskInstanceCompletionForm(forms.ModelForm):
+    class Meta:
+        model = TaskInstanceCompletion
+        fields = ["task_instance"]

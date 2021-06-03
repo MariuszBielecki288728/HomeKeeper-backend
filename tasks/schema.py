@@ -6,7 +6,7 @@ from graphql.error.graphql_error import GraphQLError
 from graphql.type import GraphQLResolveInfo
 from graphql_jwt.decorators import login_required
 
-from tasks.forms import TaskCreationForm
+from tasks.forms import TaskCreationForm, TaskInstanceCompletionForm
 from tasks.models import Task, TaskInstance, TaskInstanceCompletion
 
 from teams.models import Team
@@ -30,9 +30,11 @@ class TaskType(DjangoObjectType):
 
 
 class TaskInstanceType(DjangoObjectType):
+    active = graphene.Field(graphene.Boolean())
+
     class Meta:
         model = TaskInstance
-        fields = "__all__"
+        fields = ("id", "task", "active_from", "completed", "active")
 
 
 class TaskInstanceCompletionType(DjangoObjectType):
@@ -68,8 +70,28 @@ class RemoveTask:
     pass
 
 
-class SubmitTaskCompletion:
-    pass
+class SubmitTaskInstanceCompletion(DjangoModelFormMutation):
+    taskInstanceCompletion = graphene.Field(TaskInstanceCompletionType)
+
+    class Meta:
+        form_class = TaskInstanceCompletionForm
+
+    @classmethod
+    @login_required
+    def mutate(cls, root, info, input):
+        task_instance = TaskInstance.objects.get(pk=input.task_instance)
+        Team.check_membership(info.context.user, task_instance.task.team.id)
+        if task_instance.completed or task_instance.deleted_at:
+            raise GraphQLError("This task instance is already completed or deleted")
+        return super().mutate(root, info, input)
+
+    @classmethod
+    def perform_mutate(cls, form, info):
+        obj = form.save(commit=False)
+        obj.user_who_completed_task = obj.created_by = info.context.user
+        obj.save()
+        kwargs = {cls._meta.return_field_name: obj}
+        return cls(errors=[], **kwargs)
 
 
 class RevertTaskCompletion:
@@ -135,3 +157,4 @@ class Query(graphene.ObjectType):
 
 class Mutation(graphene.ObjectType):
     create_task = CreateTask.Field()
+    submit_task_instance_completion = SubmitTaskInstanceCompletion.Field()

@@ -25,12 +25,6 @@ def create_task_query(name, team_id, base_prize=10):
                 }}
                 task {{
                     id
-                    createdAt
-                    createdBy {{
-                        username
-                    }}
-                    modifiedAt
-                    deletedAt
                     name
                     description
                     team {{
@@ -178,3 +172,40 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             response.data["relatedTaskInstances"][0]["task"]["team"]["id"],
             str(self.tasks[2].team.id),
         )
+
+    def test_submit_completion(self):
+        task_instances = TaskInstance.objects.filter(task=self.tasks[0])
+        self.assertEqual(len(list(task_instances.all())), 1)
+        task_instance = task_instances.first()
+        query = f""" mutation {{submitTaskInstanceCompletion(input: {{taskInstance: {task_instance.id}}}) {{
+            errors {{
+            field
+            messages
+            }}
+            taskInstanceCompletion {{
+            userWhoCompletedTask {{
+                id
+                username
+            }}
+            taskInstance {{id, task {{id, name}}, activeFrom, completed, active}}
+            }}
+        }} }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertFalse(response.data["submitTaskInstanceCompletion"]["errors"])
+        self.assertEqual(
+            response.data["submitTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "userWhoCompletedTask"
+            ]["id"],
+            str(self.user.id),
+        )
+        self.assertEqual(
+            response.data["submitTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "taskInstance"
+            ]["id"],
+            str(task_instance.id),
+        )
+        task_instances = TaskInstance.objects.filter(task=self.tasks[0])
+        self.assertEqual(len(list(task_instances.all())), 1)
+        self.assertFalse(self.tasks[0].active)
+        self.assertTrue(self.tasks[1].active)
