@@ -46,4 +46,4 @@ class Team(TrackingFieldsMixin):
     def check_membership(user, team_id):
         team = Team.objects.get(pk=team_id)
         if not team.members.filter(id=user.id).exists():
-            raise ValueError("User is not a member of given team")
+            raise ValueError(f"User {user.id} is not a member of team {team_id}")
