@@ -24,7 +24,7 @@ class Register(DjangoFormMutation):
 
 class Query(graphene.ObjectType):
     me = graphene.Field(UserType)
-    users = graphene.List(UserType)
+    users = graphene.Field(graphene.List(UserType))
 
     def resolve_users(self, info):
         return get_user_model().objects.all()

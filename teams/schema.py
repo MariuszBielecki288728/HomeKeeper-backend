@@ -83,8 +83,8 @@ class LeaveTeam(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    my_teams = graphene.List(TeamType)
-    teams = graphene.List(TeamType)
+    my_teams = graphene.Field(graphene.List(TeamType))
+    teams = graphene.Field(graphene.List(TeamType))
     team_members = graphene.Field(
         graphene.List(UserType),
         team_id=graphene.Int(),

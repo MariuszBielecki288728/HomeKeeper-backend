@@ -1,16 +1,69 @@
+from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils.timezone import now
+
 from teams.models import Team
 from common.models import TrackingFieldsMixin
 
-from django.core.validators import MinValueValidator
-
 
 class Task(TrackingFieldsMixin):
-    name = models.CharField(max_length=50)
-    description = models.CharField(max_length=300)
+    """Data model representing task, includes description of the task."""
 
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=500, blank=True)
+
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
 
     base_points_prize = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    refresh_interval = models.DurationField()
-    is_reoccuring = models.BooleanField()
+    refresh_interval = models.DurationField(blank=True, null=True)
+    is_recurring = models.BooleanField(default=False)
+
+    @property
+    def active(self) -> bool:
+        """
+        The Task is active when:
+            it is not deleted
+            there is at least one task instance that is active
+        """
+        return super().active and any(
+            ti.active
+            for ti in TaskInstance.objects.filter(
+                task=self.id,
+            ).all()
+        )
+
+
+class TaskInstance(TrackingFieldsMixin):
+    """
+    Data model representing instance of a task, includes reference to the task.
+    Since tasks may be reoccuring, this model is a representation of a single occurence.
+    """
+
+    task = models.ForeignKey(Task, on_delete=models.PROTECT)
+    active_from = models.DateTimeField()
+    completed = models.BooleanField(default=False)
+
+    @property
+    def active(self) -> bool:
+        """
+        The TaskInstance is active when:
+            it is not deleted
+            and is not completed
+            and the current date is after the active_from field value
+        """
+        return self.completed is False and self.active_from <= now() and super().active
+
+    def calculate_prize(self) -> int:
+        return self.task.base_points_prize
+
+
+class TaskInstanceCompletion(TrackingFieldsMixin):
+    """
+    Data model that represents the event of user completing the task.
+    """
+
+    task_instance = models.ForeignKey(TaskInstance, on_delete=models.PROTECT)
+    user_who_completed_task = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT
+    )
