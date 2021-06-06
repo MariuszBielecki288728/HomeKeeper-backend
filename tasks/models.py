@@ -71,7 +71,9 @@ class TaskInstance(TrackingFieldsMixin):
         multiplication_interval = self.task.refresh_interval or datetime.timedelta(
             days=POINTS_INCREASE_INTERVAL
         )
-        return math.ceil((now() - self.active_from) / (multiplication_interval * 2))
+        return self.task.base_points_prize * math.ceil(
+            (now() - self.active_from) / (multiplication_interval * 2)
+        )
 
 
 class TaskInstanceCompletion(TrackingFieldsMixin):
