@@ -51,9 +51,10 @@ class TeamFactory(TrackingFieldsMixinFactory):
     @factory.post_generation
     def members(self, create, extracted):
         if not create:
-            return [self.created_by]
+            return
+
+        self.members.add(self.created_by)
         if extracted:
-            self.members.add(self.created_by)
             for member in extracted:
                 self.members.add(member)
 
