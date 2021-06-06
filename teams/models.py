@@ -6,13 +6,13 @@ from django.core.validators import MinLengthValidator
 
 
 class TeamManager(models.Manager):
-    def create_team(self, name: str, password: str):
+    def create_team(self, name: str, password: str, **kwargs):
         if not name:
             raise ValueError("Team must have a name")
         if not password:
             raise ValueError("Team must have a password")
 
-        team = self.model(name=name)
+        team = self.model(name=name, **kwargs)
         team.set_password(password)
         team.save()
         return team

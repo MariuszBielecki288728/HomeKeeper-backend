@@ -4,8 +4,11 @@ django-graphql-jwt~=0.3.2
 graphene-django~=3.0.0b7
 psycopg2~=2.8.6
 
-parameterized~=0.8.1
-coverage~=5.5
 mypy==0.812
 django-stubs~=1.8.0
 graphene-stubs==0.15
+
+factory-boy~=3.2.0
+Faker~=8.5.1
+parameterized~=0.8.1
+coverage~=5.5
