@@ -14,7 +14,6 @@ class TaskPrizeUnitTestCase(TestCase):
         task = TaskFactoryNoSignals(
             is_recurring=True,
             refresh_interval=datetime.timedelta(days=1),
-            base_points_prize=5,
         )
         self.task_instance = TaskInstanceFactory(task=task, active_from=active_from)
 
