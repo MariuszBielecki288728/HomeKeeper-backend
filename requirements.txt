@@ -2,9 +2,9 @@ Django~=3.2
 Django-filter~=2.4.0
 django-graphql-jwt~=0.3.2
 graphene-django~=3.0.0b7
-psycopg2~=2.8.6
+psycopg2~=2.9.1
 
-mypy==0.812
+mypy==0.910
 django-stubs~=1.8.0
 graphene-stubs==0.15
 
