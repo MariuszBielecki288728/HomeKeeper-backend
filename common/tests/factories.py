@@ -71,6 +71,10 @@ class TaskFactory(TrackingFieldsMixinFactory):
 
 @factory.django.mute_signals(signals.post_save)
 class TaskFactoryNoSignals(TaskFactory):
+    """
+    Factory that should be used when one want to create TaskInstance manually.
+    """
+
     pass
 
 
