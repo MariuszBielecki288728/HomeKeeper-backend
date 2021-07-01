@@ -1,5 +1,7 @@
 import graphene
 
+from django.db.models import Sum
+
 from graphene_django.forms.mutation import DjangoModelFormMutation
 from graphene_django import DjangoObjectType
 from graphql.error.graphql_error import GraphQLError
@@ -83,7 +85,7 @@ class SubmitTaskInstanceCompletion(DjangoModelFormMutation):
     @login_required
     def mutate(cls, root, info, input):
         task_instance = TaskInstance.objects.get(pk=input.task_instance)
-        Team.check_membership(info.context.user, task_instance.task.team.id)
+        Team.check_membership(info.context.user.id, task_instance.task.team.id)
         if task_instance.completed or task_instance.deleted_at:
             raise GraphQLError("This task instance is already completed or deleted")
         return super().mutate(root, info, input)
@@ -123,14 +125,17 @@ class Query(graphene.ObjectType):
     )
     user_points = graphene.Field(
         graphene.Int(),
+        user_id=graphene.Int(required=True),
         team_id=graphene.Int(required=True),
+        from_datetime=graphene.DateTime(),
+        to_datetime=graphene.DateTime(),
     )
 
     @login_required
     def resolve_tasks(
         self, info: GraphQLResolveInfo, team_id: int, only_active: bool = False
     ):
-        Team.check_membership(info.context.user, team_id)
+        Team.check_membership(info.context.user.id, team_id)
         tasks = Task.objects.filter(team=team_id)
         return [t for t in tasks.all() if t.active] if only_active else tasks
 
@@ -138,7 +143,7 @@ class Query(graphene.ObjectType):
     def resolve_task_instances(
         self, info: GraphQLResolveInfo, team_id: int, only_active: bool = False
     ):
-        Team.check_membership(info.context.user, team_id)
+        Team.check_membership(info.context.user.id, team_id)
         task_instances = TaskInstance.objects.filter(task__team=team_id)
         return (
             [t for t in task_instances.all() if t.active]
@@ -156,6 +161,23 @@ class Query(graphene.ObjectType):
             if only_active
             else task_instances
         )
+
+    def resolve_user_points(
+        self,
+        info: GraphQLResolveInfo,
+        user_id: int,
+        team_id: int,
+        from_datetime: bool = None,
+        to_datetime: bool = None,
+    ):
+        Team.check_membership(info.context.user.id, team_id)
+        Team.check_membership(user_id, team_id)
+        return TaskInstanceCompletion.objects.filter(
+            user_who_completed_task=user_id,
+            task_instance__task__team=team_id,
+            active=True,
+            created_at__range=[from_datetime, to_datetime],  # what about Nones?
+        ).aggregate(Sum("points_granted"))
 
 
 class Mutation(graphene.ObjectType):

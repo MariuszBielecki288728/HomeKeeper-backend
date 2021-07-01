@@ -1,10 +1,12 @@
 import datetime
 import math
+import typing
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.timezone import now
+
 
 from teams.models import Team
 from common.models import TrackingFieldsMixin
@@ -97,3 +99,27 @@ class TaskInstanceCompletion(TrackingFieldsMixin):
         Sets current reward of the task as granted points. Does not save.
         """
         self.points_granted = self.task_instance.current_prize
+
+    @staticmethod
+    def count_user_points(
+        user_id: int,
+        team_id: int,
+        from_datetime: typing.Optional[datetime.datetime] = None,
+        to_datetime: typing.Optional[datetime.datetime] = None,
+    ) -> int:
+        query = TaskInstanceCompletion.objects.filter(
+            user_who_completed_task=user_id,
+            task_instance__task__team=team_id,
+            deleted_at=None,
+        )
+        if from_datetime is not None:
+            query = query.filter(created_at__gte=from_datetime)
+        if to_datetime is not None:
+            query = query.filter(created_at__lte=to_datetime)
+
+        return (
+            query.distinct().aggregate(models.Sum("points_granted"))[
+                "points_granted__sum"
+            ]
+            or 0
+        )

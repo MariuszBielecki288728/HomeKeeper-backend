@@ -1,6 +1,7 @@
 import factory
 from faker import Faker
 
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 from common.models import TrackingFieldsMixin
@@ -31,7 +32,7 @@ class TrackingFieldsMixinFactory(factory.django.DjangoModelFactory):
         model = TrackingFieldsMixin
         abstract = True
 
-    created_at = faker.date_object()
+    created_at = faker.past_datetime(tzinfo=timezone.get_current_timezone())
     created_by = factory.SubFactory(UserFactory)
 
 
@@ -72,7 +73,7 @@ class TaskFactory(TrackingFieldsMixinFactory):
 @factory.django.mute_signals(signals.post_save)
 class TaskFactoryNoSignals(TaskFactory):
     """
-    Factory that should be used when one want to create TaskInstance manually.
+    Factory that should be used when one wants to create TaskInstance manually.
     """
 
     pass
