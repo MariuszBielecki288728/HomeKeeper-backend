@@ -7,6 +7,8 @@ from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth import get_user_model
 from graphql_jwt.testcases import JSONWebTokenTestCase
 
+from common.tests import factories
+
 from teams.models import Team
 from tasks.models import TaskInstance, Task
 
@@ -282,3 +284,83 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         active_instance = task_instances.filter(completed=False).first()
         self.assertTrue(active_instance.active)
         self.assertEqual(mocked + refresh_interval, active_instance.active_from)
+
+    def test_user_points(self):
+        completions = factories.TaskInstanceCompletionFactory.create_batch(
+            10,
+            user_who_completed_task=self.user,
+            task_instance__task__team=self.team,
+        )
+        query = f"""query {{
+            userPoints(userId: {self.user.id}, teamId: {self.team.id})
+        }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertEqual(
+            response.data["userPoints"],
+            sum(comp.points_granted for comp in completions),
+        )
+
+    def test_user_points_with_datetime(self):
+        query = f"""query {{
+            userPoints(
+                userId: {self.user.id},
+                teamId: {self.team.id},
+                fromDatetime: "2013-07-16T19:23"
+            )
+        }}"""
+
+        with mock.patch(
+            "tasks.models.TaskInstanceCompletion.count_user_points",
+            mock.Mock(return_value=0),
+        ) as mocked:
+            response = self.client.execute(query)
+            mocked.assert_called_with(
+                self.user.id,
+                self.team.id,
+                datetime.datetime(2013, 7, 16, 19, 23),
+                None,
+            )
+        self.assertFalse(response.errors)
+        self.assertEqual(
+            response.data["userPoints"],
+            0,
+        )
+
+    def test_team_members_points(self):
+        user_completions = factories.TaskInstanceCompletionFactory.create_batch(
+            10,
+            user_who_completed_task=self.user,
+            task_instance__task__team=self.team,
+        )
+        member_completions = factories.TaskInstanceCompletionFactory.create_batch(
+            5,
+            user_who_completed_task=self.member,
+            task_instance__task__team=self.team,
+        )
+        query = f"""query {{
+            teamMembersPoints(teamId: {self.team.id}) {{
+                member {{
+                    username
+                }}
+                points
+            }}
+        }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertEqual(
+            response.data["teamMembersPoints"][0]["member"]["username"],
+            self.user.username,
+        )
+        self.assertEqual(
+            response.data["teamMembersPoints"][0]["points"],
+            sum(comp.points_granted for comp in user_completions),
+        )
+        self.assertEqual(
+            response.data["teamMembersPoints"][1]["member"]["username"],
+            self.member.username,
+        )
+        self.assertEqual(
+            response.data["teamMembersPoints"][1]["points"],
+            sum(comp.points_granted for comp in member_completions),
+        )

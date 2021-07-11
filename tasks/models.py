@@ -107,6 +107,14 @@ class TaskInstanceCompletion(TrackingFieldsMixin):
         from_datetime: typing.Optional[datetime.datetime] = None,
         to_datetime: typing.Optional[datetime.datetime] = None,
     ) -> int:
+        """
+        Counts points for a given user in a given team.
+        User has to be a member of the given team.
+        There may be datetime bounds specified (inclusive).
+
+        Note:
+            Consider making it a user or member ("through" model) method.
+        """
         query = TaskInstanceCompletion.objects.filter(
             user_who_completed_task=user_id,
             task_instance__task__team=team_id,
