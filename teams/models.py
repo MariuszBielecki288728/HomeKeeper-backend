@@ -6,13 +6,13 @@ from django.core.validators import MinLengthValidator
 
 
 class TeamManager(models.Manager):
-    def create_team(self, name: str, password: str):
+    def create_team(self, name: str, password: str, **kwargs):
         if not name:
             raise ValueError("Team must have a name")
         if not password:
             raise ValueError("Team must have a password")
 
-        team = self.model(name=name)
+        team = self.model(name=name, **kwargs)
         team.set_password(password)
         team.save()
         return team
@@ -43,7 +43,7 @@ class Team(TrackingFieldsMixin):
         return hashers.check_password(raw_password, self.password)
 
     @staticmethod
-    def check_membership(user, team_id):
+    def check_membership(user_id: int, team_id: int):
         team = Team.objects.get(pk=team_id)
-        if not team.members.filter(id=user.id).exists():
-            raise ValueError(f"User {user.id} is not a member of team {team_id}")
+        if not team.members.filter(id=user_id).exists():
+            raise ValueError(f"User {user_id} is not a member of team {team_id}")

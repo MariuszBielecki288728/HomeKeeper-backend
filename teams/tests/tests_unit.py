@@ -22,6 +22,6 @@ class TeamTestCase(TestCase):
         with self.assertRaisesRegex(
             ValueError, f"User {user.id} is not a member of team {team.id}"
         ):
-            Team.check_membership(user, team.id)
+            Team.check_membership(user.id, team.id)
         team.members.add(user)
-        Team.check_membership(user, team.id)
+        Team.check_membership(user.id, team.id)

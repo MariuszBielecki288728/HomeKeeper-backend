@@ -6,7 +6,7 @@ from tasks.models import Task, TaskInstance, TaskInstanceCompletion
 
 
 @receiver(post_save, sender=Task)
-def create_task_instance(sender, instance, created, **kwargs):
+def create_task_instance(sender, instance: Task, created, **kwargs):
     if created:
         TaskInstance.objects.create(task=instance, active_from=timezone.now())
 
