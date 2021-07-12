@@ -12,22 +12,15 @@ class UserType(DjangoObjectType):
         model = get_user_model()
 
 
+# FIXME: Register Mutation returns RegisterPayload which contains
+# unecrypted user password!
 class Register(DjangoFormMutation):
     class Meta:
         form_class = RegisterForm
 
-    # @classmethod
-    # @login_required
-    # def mutate(cls, *args, **kwargs):
-    #     super().mutate(*args, **kwargs)
-
 
 class Query(graphene.ObjectType):
     me = graphene.Field(UserType)
-    users = graphene.Field(graphene.List(UserType))
-
-    def resolve_users(self, info):
-        return get_user_model().objects.all()
 
     @login_required
     def resolve_me(self, info):
