@@ -2,10 +2,11 @@ from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth.models import User
 from graphql_jwt.testcases import JSONWebTokenTestCase
 
+from common.tests import factories
 from .queries import REGISTER_MUTATION
 
 
-class UserTestCase(GraphQLTestCase, JSONWebTokenTestCase):
+class UserAuthTestCase(GraphQLTestCase, JSONWebTokenTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             "john", "lennon@thebeatles.com", "johnpassword"
@@ -42,4 +43,33 @@ class UserTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         assert (
             "This password is too short"
             in response.data["register"]["errors"][0]["messages"][0]
+        )
+
+
+class UserProfileTestCase(GraphQLTestCase, JSONWebTokenTestCase):
+    def setUp(self):
+        self.user = factories.UserFactoryNoSignals()
+        self.client.authenticate(self.user)
+
+    def test_my_profile(self):
+        query = """
+            query {
+                me {
+                    username
+                    profile {
+                        imageId
+                        colorId
+                    }
+                }
+            }
+            """
+
+        response = self.client.execute(query)
+        self.assertIsNone(response.errors)
+        self.assertEqual(response.data["me"]["username"], self.user.username)
+        self.assertEqual(
+            response.data["me"]["profile"]["imageId"], self.user.profile.image_id
+        )
+        self.assertEqual(
+            response.data["me"]["profile"]["colorId"], self.user.profile.color_id
         )

@@ -1,13 +1,22 @@
-from django.contrib.auth import get_user_model
-from users.forms import RegisterForm
-
 import graphene
+
+from django.contrib.auth import get_user_model
 from graphene_django.forms.mutation import DjangoFormMutation
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
+from users.forms import RegisterForm
+from users.models import Profile
+
+
+class ProfileType(DjangoObjectType):
+    class Meta:
+        model = Profile
+
 
 class UserType(DjangoObjectType):
+    profile = graphene.Field(ProfileType)
+
     class Meta:
         model = get_user_model()
 
