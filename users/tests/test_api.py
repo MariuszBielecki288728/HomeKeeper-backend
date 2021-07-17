@@ -73,3 +73,46 @@ class UserProfileTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertEqual(
             response.data["me"]["profile"]["colorId"], self.user.profile.color_id
         )
+
+    def test_set_profile_data_logged_user(self):
+        image_id = "image"
+        old_color_id = self.user.profile.color_id
+        query = f"""
+            mutation {{
+                setProfileData(input: {{imageId: "{image_id}"}}) {{
+                    profile {{
+                        imageId
+                        colorId
+                    }}
+                }}
+            }}
+        """
+        response = self.client.execute(query)
+        self.assertIsNone(response.errors)
+        self.assertEqual(
+            response.data["setProfileData"]["profile"]["imageId"], image_id
+        )
+        self.assertEqual(
+            response.data["setProfileData"]["profile"]["colorId"], old_color_id
+        )
+
+    def test_set_profile_data_other_user(self):
+        color_id = "color"
+        other_user = factories.UserFactory()
+        factories.TeamFactory(members=[self.user, other_user])
+        query = f"""
+            mutation {{
+                setProfileData(input: {{userId: {other_user.id}, colorId: "{color_id}"}}) {{
+                    profile {{
+                        imageId
+                        colorId
+                    }}
+                }}
+            }}
+        """
+        response = self.client.execute(query)
+        self.assertIsNone(response.errors)
+        self.assertEqual(
+            response.data["setProfileData"]["profile"]["colorId"], color_id
+        )
+        self.assertIsNone(response.data["setProfileData"]["profile"]["imageId"])
