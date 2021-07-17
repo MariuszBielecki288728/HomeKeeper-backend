@@ -43,7 +43,18 @@ class Team(TrackingFieldsMixin):
         return hashers.check_password(raw_password, self.password)
 
     @staticmethod
-    def check_membership(user_id: int, team_id: int):
+    def check_membership(user_id: int, team_id: int) -> None:
         team = Team.objects.get(pk=team_id)
         if not team.members.filter(id=user_id).exists():
             raise ValueError(f"User {user_id} is not a member of team {team_id}")
+
+    @staticmethod
+    def check_users_in_the_same_team(user_id: int, other_user_id: int) -> None:
+        if (
+            not Team.objects.filter(members__id=user_id)
+            .filter(members__id=other_user_id)
+            .exists()
+        ):
+            raise ValueError(
+                f"User {user_id} is not in the same team as {other_user_id}"
+            )

@@ -17,3 +17,16 @@ class TrackingFieldsMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ViewConfigurationFieldsMixin(models.Model):
+    """
+    Fields that should be used by clients to reference local
+    objects, e.g. profile image
+    """
+
+    image_id = models.CharField(max_length=10, null=True, blank=True)
+    color_id = models.CharField(max_length=10, null=True, blank=True)
+
+    class Meta:
+        abstract = True

@@ -4,9 +4,9 @@ from faker import Faker
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from common.models import TrackingFieldsMixin
+from common.models import TrackingFieldsMixin, ViewConfigurationFieldsMixin
+from users.models import Profile
 from teams.models import Team
-
 from tasks.models import Task, TaskInstance, TaskInstanceCompletion
 from tasks import signals
 
@@ -27,6 +27,36 @@ class UserFactory(factory.django.DjangoModelFactory):
         return manager.create_user(*args, **kwargs)
 
 
+class ViewConfigurationFieldsMixinFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ViewConfigurationFieldsMixin
+        abstract = True
+
+    image_id = faker.text(max_nb_chars=10)
+    color_id = faker.text(max_nb_chars=10)
+
+
+@factory.django.mute_signals(signals.post_save)
+class ProfileFactory(ViewConfigurationFieldsMixinFactory):
+    class Meta:
+        model = Profile
+
+    # We pass in profile=None to prevent UserFactory from creating another profile
+    # (this disables the RelatedFactory)
+    user = factory.SubFactory(
+        "common.tests.factories.UserFactoryNoSignals", profile=None
+    )
+
+
+@factory.django.mute_signals(signals.post_save)
+class UserFactoryNoSignals(UserFactory):
+    """
+    Factory that should be used when one wants to create Profile manually (or by factory).
+    """
+
+    profile = factory.RelatedFactory(ProfileFactory, factory_related_name="user")
+
+
 class TrackingFieldsMixinFactory(factory.django.DjangoModelFactory):
     """
     Note: auto_now_add overwrites created_at value.
@@ -38,7 +68,7 @@ class TrackingFieldsMixinFactory(factory.django.DjangoModelFactory):
         abstract = True
 
     created_at = faker.past_datetime(tzinfo=timezone.get_current_timezone())
-    created_by = factory.SubFactory(UserFactory)
+    created_by = factory.SubFactory(UserFactoryNoSignals)
 
 
 class TeamFactory(TrackingFieldsMixinFactory):
@@ -46,7 +76,7 @@ class TeamFactory(TrackingFieldsMixinFactory):
         model = Team
 
     name = faker.text(max_nb_chars=50)
-    members = factory.SubFactory(UserFactory)
+    members = factory.SubFactory(UserFactoryNoSignals)
     password = faker.password(length=32)
 
     @classmethod
@@ -78,7 +108,8 @@ class TaskFactory(TrackingFieldsMixinFactory):
 @factory.django.mute_signals(signals.post_save)
 class TaskFactoryNoSignals(TaskFactory):
     """
-    Factory that should be used when one wants to create TaskInstance manually.
+    Factory that should be used when one wants to create
+    TaskInstance manually (or by factory).
     """
 
     pass
@@ -97,4 +128,4 @@ class TaskInstanceCompletionFactory(TrackingFieldsMixinFactory):
         model = TaskInstanceCompletion
 
     task_instance = factory.SubFactory(TaskInstanceFactory)
-    user_who_completed_task = factory.SubFactory(UserFactory)
+    user_who_completed_task = factory.SubFactory(UserFactoryNoSignals)
