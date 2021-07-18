@@ -2,12 +2,15 @@ import graphene
 
 from graphene_django.forms.mutation import DjangoModelFormMutation
 from graphene_django import DjangoObjectType
+from graphene_django_extras import DjangoSerializerMutation
 from graphql.error.graphql_error import GraphQLError
 from graphql.type import GraphQLResolveInfo
 from graphql_jwt.decorators import login_required
 
-from tasks.forms import TaskCreationForm, TaskInstanceCompletionForm
+from common.schema import AuthDjangoSerializerMutationMixin
+from tasks.forms import TaskInstanceCompletionForm
 from tasks.models import Task, TaskInstance, TaskInstanceCompletion
+from tasks.serializers import TaskSerializer
 
 from teams.models import Team
 
@@ -15,8 +18,7 @@ from users.schema import UserType
 
 
 class TaskType(DjangoObjectType):
-    # It seems that graphene tries serialize refresh_interval to float,
-    # but DurationField should be serialized to string, hence overwrite it
+    # make Graphene serialize interval to human-readable form
     refresh_interval = graphene.Field(graphene.String())
     active = graphene.Field(graphene.Boolean())
 
@@ -48,31 +50,24 @@ class TaskInstanceCompletionType(DjangoObjectType):
         fields = "__all__"
 
 
-class CreateTask(DjangoModelFormMutation):
+class TaskSerializerMutation(
+    AuthDjangoSerializerMutationMixin, DjangoSerializerMutation
+):
     task = graphene.Field(TaskType)
 
     class Meta:
-        form_class = TaskCreationForm
-
-    @classmethod
-    @login_required
-    def mutate(cls, root, info, input):
-        team = Team.objects.get(pk=input.team)
-        if not team.members.filter(id=info.context.user.id).exists():
-            raise GraphQLError("Only members of the given team may create tasks")
-        return super().mutate(root, info, input)
-
-    @classmethod
-    def perform_mutate(cls, form, info):
-        obj = form.save()
-        obj.created_by = info.context.user
-        obj.save()
-        kwargs = {cls._meta.return_field_name: obj}
-        return cls(errors=[], **kwargs)
-
-
-class RemoveTask:
-    pass
+        description = "DRF serializer based Mutation for Tasks"
+        serializer_class = TaskSerializer
+        only_fields = [
+            "id",
+            "name",
+            "description",
+            "team",
+            "base_points_prize",
+            "refresh_interval",
+            "is_recurring",
+        ]
+        input_field_name = "input"
 
 
 class SubmitTaskInstanceCompletion(DjangoModelFormMutation):
@@ -219,5 +214,8 @@ class Query(graphene.ObjectType):
 
 
 class Mutation(graphene.ObjectType):
-    create_task = CreateTask.Field()
+    create_task = TaskSerializerMutation.CreateField()
+    update_task = TaskSerializerMutation.UpdateField()
+    delete_task = TaskSerializerMutation.DeleteField()
+
     submit_task_instance_completion = SubmitTaskInstanceCompletion.Field()
