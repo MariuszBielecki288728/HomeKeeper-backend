@@ -92,6 +92,29 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
 
         self.assertEqual(task_instance.active_from, mocked)
 
+    def test_create_task_with_interval(self):
+        name = "Clean the bathroom"
+        team_id = self.team.id
+        query = create_task_query(name, team_id, interval=604800)
+        mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+            response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertFalse(response.data["createTask"]["errors"])
+        self.assertEqual(name, response.data["createTask"]["task"]["name"])
+        self.assertEqual(
+            self.team.id, int(response.data["createTask"]["task"]["team"]["id"])
+        )
+        self.assertEqual(
+            "7 days, 0:00:00", response.data["createTask"]["task"]["refreshInterval"]
+        )
+        self.assertTrue(response.data["createTask"]["task"]["isRecurring"])
+        task_instance = TaskInstance.objects.filter(
+            task_id=response.data["createTask"]["task"]["id"]
+        ).first()
+
+        self.assertEqual(task_instance.active_from, mocked)
+
     def test_create_task_wrong_team(self):
         name = "Clean the bathroom"
 
