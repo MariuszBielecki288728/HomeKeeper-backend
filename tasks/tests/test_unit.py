@@ -216,7 +216,7 @@ class TaskInstanceCompletionSignalsTestCase(TestCase):
         self.assertFalse(task_instance.task.active)
 
         now = timezone.now()
-        with mock.patch("tasks.models.now", mock.Mock(return_value=now)):
+        with mock.patch("common.models.timezone.now", mock.Mock(return_value=now)):
             completion.delete()
         completion.refresh_from_db()
         task_instance.refresh_from_db()
