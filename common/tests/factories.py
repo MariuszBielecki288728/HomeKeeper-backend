@@ -1,3 +1,4 @@
+import typing
 import factory
 from faker import Faker
 
@@ -76,7 +77,7 @@ class TeamFactory(TrackingFieldsMixinFactory):
         model = Team
 
     name = faker.text(max_nb_chars=50)
-    members = factory.SubFactory(UserFactoryNoSignals)
+    members = []
     password = faker.password(length=32)
 
     @classmethod
@@ -85,7 +86,7 @@ class TeamFactory(TrackingFieldsMixinFactory):
         return manager.create_team(*args, **kwargs)
 
     @factory.post_generation
-    def members(self, create, extracted):
+    def members(self, create, extracted: typing.List[get_user_model()]):
         if not create:
             return
 
