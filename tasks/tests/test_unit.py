@@ -4,9 +4,11 @@ import pytz
 from parameterized import parameterized
 from unittest import mock
 from django.test import TestCase
+from django.utils import timezone
 
 from common.tests import factories
-from tasks.models import TaskInstanceCompletion
+
+from tasks.models import TaskInstance, TaskInstanceCompletion
 
 
 class TaskPrizeUnitTestCase(TestCase):
@@ -106,13 +108,11 @@ class TaskInstanceCompletionUserPointsTestCase(TestCase):
         from_date = datetime.datetime(2020, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
         some_date_after = datetime.datetime(2020, 4, 10, 0, 0, 0, tzinfo=pytz.utc)
 
-        comp_before_date = factories.TaskInstanceCompletionFactory(
+        factories.TaskInstanceCompletionFactory(
             user_who_completed_task=self.other_user_with_no_completions,
             task_instance__task__team=self.team,
+            created_at=some_date_before,
         )
-        # TODO created_at ignores values from factory, should be improved
-        comp_before_date.created_at = some_date_before
-        comp_before_date.save()
 
         comp_after_date = factories.TaskInstanceCompletionFactory(
             user_who_completed_task=self.other_user_with_no_completions,
@@ -194,4 +194,160 @@ class TaskInstanceCompletionUserPointsTestCase(TestCase):
                 to_datetime=to_date,
             ),
             comp_ok_date.points_granted,
+        )
+
+
+class TaskInstanceCompletionSignalsTestCase(TestCase):
+    def setUp(self) -> None:
+        self.member = factories.UserFactory()
+        self.team = factories.TeamFactory(members=[self.member])
+
+    def test_revert_single_task(self):
+        task_instance = factories.TaskInstanceFactory(task__team=self.team)
+        completion = factories.TaskInstanceCompletionFactory(
+            task_instance=task_instance, user_who_completed_task=self.member
+        )
+        task_instance.refresh_from_db()
+        self.assertTrue(task_instance.completed)
+        self.assertEqual(
+            TaskInstance.objects.filter(task=task_instance.task).count(), 1
+        )
+        self.assertFalse(task_instance.active)
+        self.assertFalse(task_instance.task.active)
+
+        now = timezone.now()
+        with mock.patch("tasks.models.now", mock.Mock(return_value=now)):
+            completion.delete()
+        completion.refresh_from_db()
+        task_instance.refresh_from_db()
+
+        self.assertEqual(completion.deleted_at, now)
+        self.assertFalse(completion.active)
+        self.assertTrue(task_instance.active)
+        self.assertEqual(
+            TaskInstance.objects.filter(task=task_instance.task).count(), 1
+        )
+        self.assertTrue(task_instance.task.active)
+
+    def test_revert_reccurrent_task(self):
+        task = factories.TaskFactoryNoSignals(
+            team=self.team,
+            is_recurring=True,
+            refresh_interval=datetime.timedelta(days=5),
+        )
+        task_instance = factories.TaskInstanceFactory(
+            task=task, active_from=task.created_at
+        )
+        with mock.patch(
+            "tasks.models.now",
+            mock.Mock(return_value=task.created_at + datetime.timedelta(days=2)),
+        ):
+            completion = factories.TaskInstanceCompletionFactory(
+                task_instance=task_instance, user_who_completed_task=self.member
+            )
+        task_instance.refresh_from_db()
+        self.assertEqual(
+            completion.points_granted, task_instance.task.base_points_prize
+        )
+        self.assertTrue(task_instance.completed)
+        self.assertIsNone(task_instance.deleted_at)
+        self.assertEqual(TaskInstance.objects.filter(task=task).count(), 2)
+        self.assertEqual(
+            TaskInstanceCompletion.count_user_points(self.member.id, self.team.id),
+            completion.points_granted,
+        )
+
+        now = task.created_at + datetime.timedelta(days=4)
+        with mock.patch("common.models.timezone.now", mock.Mock(return_value=now)):
+            completion.delete()
+
+        task_instance.refresh_from_db()
+        self.assertTrue(task_instance.completed)
+        with mock.patch(
+            "tasks.models.now", mock.Mock(return_value=now + datetime.timedelta(days=2))
+        ):
+            self.assertFalse(task_instance.active)
+
+        self.assertEqual(task_instance.deleted_at, now)
+        self.assertEqual(TaskInstance.objects.filter(task=task).count(), 2)
+        self.assertEqual(
+            TaskInstance.objects.filter(
+                task=task, completed=False, deleted_at=None
+            ).count(),
+            1,
+        )
+        new_task_instance = TaskInstance.objects.filter(
+            task=task, completed=False, deleted_at=None
+        ).first()
+        with mock.patch(
+            "tasks.models.now", mock.Mock(return_value=now + datetime.timedelta(days=2))
+        ):
+            self.assertTrue(new_task_instance.active)
+        self.assertEqual(new_task_instance.active_from, task_instance.active_from)
+        self.assertEqual(new_task_instance.active_from, task.created_at)
+        self.assertEqual(
+            TaskInstanceCompletion.count_user_points(self.member.id, self.team.id), 0
+        )
+
+    def test_revert_reccurrent_task_but_it_was_completed_since_then(self):
+        task = factories.TaskFactoryNoSignals(
+            team=self.team,
+            is_recurring=True,
+            refresh_interval=datetime.timedelta(days=5),
+        )
+        task_instance = factories.TaskInstanceFactory(
+            task=task, active_from=task.created_at
+        )
+        with mock.patch(
+            "tasks.models.now",
+            mock.Mock(return_value=task.created_at + datetime.timedelta(days=2)),
+        ):
+            completion = factories.TaskInstanceCompletionFactory(
+                task_instance=task_instance, user_who_completed_task=self.member
+            )
+
+        now = task.created_at + datetime.timedelta(days=8)
+        new_task_instance = TaskInstance.objects.filter(
+            task=task, completed=False, deleted_at=None
+        ).first()
+        with mock.patch("common.models.timezone.now", mock.Mock(return_value=now)):
+            second_completion = factories.TaskInstanceCompletionFactory(
+                task_instance=new_task_instance, user_who_completed_task=self.member
+            )
+        new_task_instance.refresh_from_db()
+        self.assertEqual(
+            TaskInstanceCompletion.count_user_points(self.member.id, self.team.id),
+            completion.points_granted + second_completion.points_granted,
+        )
+        now = task.created_at + datetime.timedelta(days=9)
+        with mock.patch("common.models.timezone.now", mock.Mock(return_value=now)):
+            completion.delete()
+
+        task_instance.refresh_from_db()
+        self.assertTrue(task_instance.completed)
+        with mock.patch(
+            "tasks.models.now", mock.Mock(return_value=now + datetime.timedelta(days=2))
+        ):
+            self.assertFalse(new_task_instance.active)
+
+        self.assertEqual(task_instance.deleted_at, now)
+        self.assertEqual(TaskInstance.objects.filter(task=task).count(), 3)
+        self.assertEqual(
+            TaskInstance.objects.filter(
+                task=task, completed=False, deleted_at=None
+            ).count(),
+            1,
+        )
+        another_new_task_instance = TaskInstance.objects.filter(
+            task=task, completed=False, deleted_at=None
+        ).first()
+        with mock.patch("tasks.models.now", mock.Mock(return_value=now)):
+            self.assertFalse(another_new_task_instance.active)
+        self.assertNotEqual(
+            another_new_task_instance.active_from, task_instance.active_from
+        )
+        self.assertNotEqual(another_new_task_instance.active_from, task.created_at)
+        self.assertEqual(
+            TaskInstanceCompletion.count_user_points(self.member.id, self.team.id),
+            second_completion.points_granted,
         )

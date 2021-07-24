@@ -360,6 +360,52 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertTrue(active_instance.active)
         self.assertEqual(mocked + refresh_interval, active_instance.active_from)
 
+    def test_revert_completion(self):
+        completion = factories.TaskInstanceCompletionFactory(
+            user_who_completed_task=self.member, task_instance__task__team=self.team
+        )
+        task = completion.task_instance.task
+
+        task_instances = TaskInstance.objects.filter(task=task)
+        self.assertEqual(len(list(task_instances.all())), 1)
+
+        query = f""" mutation {{revertTaskInstanceCompletion(id: {completion.id}) {{
+            errors {{
+            field
+            messages
+            }}
+            taskInstanceCompletion {{
+            userWhoCompletedTask {{
+                id
+                username
+            }}
+            taskInstance {{id, task {{id, name}}, activeFrom, completed, active}}
+            }}
+        }} }}"""
+        mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+            response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertFalse(response.data["revertTaskInstanceCompletion"]["errors"])
+        self.assertEqual(
+            response.data["revertTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "userWhoCompletedTask"
+            ]["id"],
+            str(self.member.id),
+        )
+        self.assertEqual(
+            response.data["revertTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "taskInstance"
+            ]["id"],
+            str(completion.task_instance.id),
+        )
+        completion.task_instance.refresh_from_db()
+        task.refresh_from_db()
+        task_instances = TaskInstance.objects.filter(task=task)
+        self.assertEqual(len(list(task_instances.all())), 1)
+        self.assertTrue(task.active)
+        self.assertIsNone(completion.task_instance.deleted_at)
+
     def test_user_points(self):
         completions = factories.TaskInstanceCompletionFactory.create_batch(
             10,
