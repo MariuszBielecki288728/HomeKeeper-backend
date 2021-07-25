@@ -31,7 +31,7 @@ class Task(TrackingFieldsMixin):
         """
         The Task is active when:
             it is not deleted
-            there is at least one task instance that is active
+            and there is at least one task instance that is active.
         """
         return super().active and any(
             ti.active
@@ -58,8 +58,16 @@ class TaskInstance(TrackingFieldsMixin):
             it is not deleted
             and is not completed
             and the current date is after the active_from field value
+            and the task it is related to is not deleted.
+
+        TODO: Add tests for these calculations
         """
-        return self.completed is False and self.active_from <= now() and super().active
+        return (
+            self.completed is False
+            and self.active_from <= now()
+            and super().active
+            and self.task.deleted_at is None
+        )
 
     @property
     def current_prize(self) -> int:
@@ -119,6 +127,8 @@ class TaskInstanceCompletion(TrackingFieldsMixin):
             user_who_completed_task=user_id,
             task_instance__task__team=team_id,
             deleted_at=None,
+            task_instance__deleted_at=None,
+            task_instance__task__deleted_at=None,
         )
         if from_datetime is not None:
             query = query.filter(created_at__gte=from_datetime)

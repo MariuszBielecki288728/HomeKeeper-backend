@@ -15,6 +15,15 @@ def create_task_instance(sender, instance: Task, created, **kwargs):
 def update_task_instance_on_completion(
     sender, instance: TaskInstanceCompletion, created, **kwargs
 ):
+    """
+    Handles creating and updating task instances upon completing or deleting a completion.
+    On single occurrence tasks it marks task_instance as completed or not completed
+    (when deleting a completion). On reccurrent tasks it creates a new task_instance
+    upon completion.
+    When completion is deleted, and there exists a task instance that is next
+    in the timeline, then it modifies it to make it active from the date that
+    the completed task_instance was active from.
+    """
     if created:
         instance.task_instance.completed = True
         instance.task_instance.save()
@@ -28,23 +37,26 @@ def update_task_instance_on_completion(
                     timezone.now() + instance.task_instance.task.refresh_interval
                 ),
             )
-    # elif instance.deleted_at is not None:
-    #     instance.task_instance.deleted_at = timezone.now()
-    #     instance.task_instance.save()
+    elif instance.deleted_at is not None:
+        if TaskInstance.objects.filter(
+            task=instance.task_instance.task,
+            completed=True,
+            active_from__gt=instance.task_instance.active_from,
+            deleted_at=None,
+        ).exists():
+            instance.task_instance.delete()
+            return  # if there is completed instance since then, just delete task_instance.
 
-    #     future_task_instance = (
-    #         TaskInstance.objects.select_for_update()
-    #         .filter(task=instance.task_instance.task, completed=False, deleted_at=None)
-    #         .order_by("active_from")
-    #         .first()
-    #     )
-    #     if future_task_instance:
-    #         future_task_instance.active_from = instance.task_instance.active_from
-    #     else:
-    #         TaskInstance.objects.create(
-    #             task=instance.task_instance.task,
-    #             active_from=instance.task_instance.active_from,
-    #         )
-    #     # TODO when the completion is deleted - delete completed
-    #     # task_instance and change active_from to the
-    #     # previous active_from on the new task_instance
+        future_task_instance = (
+            TaskInstance.objects.select_for_update()
+            .filter(task=instance.task_instance.task, completed=False, deleted_at=None)
+            .order_by("active_from")
+            .first()
+        )
+        if future_task_instance is not None:
+            instance.task_instance.delete()
+            future_task_instance.active_from = instance.task_instance.active_from
+            future_task_instance.save()
+        else:
+            instance.task_instance.completed = False
+            instance.task_instance.save()

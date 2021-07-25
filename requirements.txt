@@ -1,7 +1,9 @@
 Django~=3.2
 Django-filter~=2.4.0
 django-graphql-jwt~=0.3.2
+djangorestframework~=3.12.4
 graphene-django~=3.0.0b7
+graphene-django-extras~=0.5.2
 psycopg2~=2.9.1
 
 mypy==0.910

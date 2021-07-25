@@ -1,15 +1,25 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 
 class TrackingFieldsMixin(models.Model):
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
     )
     modified_at = models.DateTimeField(auto_now=True)
-    deleted_at = models.DateTimeField(null=True, default=None)
+    deleted_at = models.DateTimeField(null=True, default=None, blank=True)
+
+    def delete(self):
+        """
+        Deletes object softly, note that it is not called at deletion
+        via object manager or querysets! If needed, it may be improved in the future:
+        https://adriennedomingus.com/blog/soft-deletion-in-django
+        """
+        self.deleted_at = timezone.now()
+        self.save()
 
     @property
     def active(self):

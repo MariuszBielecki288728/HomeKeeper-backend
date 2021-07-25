@@ -21,7 +21,7 @@ def create_task_query(name, team_id, base_prize=10, interval=None):
                 team: "{team_id}"
                 basePointsPrize: {str(base_prize)}
                 {"isRecurring: true" if interval else ""}
-                {f'refreshInterval: "{interval}"' if interval else ""}
+                {f'refreshInterval: {interval}' if interval else ""}
             }}) {{
                 errors {{
                 field
@@ -95,7 +95,7 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
     def test_create_task_with_interval(self):
         name = "Clean the bathroom"
         team_id = self.team.id
-        query = create_task_query(name, team_id, interval="P7D")
+        query = create_task_query(name, team_id, interval=604800)
         mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
         with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
             response = self.client.execute(query)
@@ -130,6 +130,81 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             response.errors[0].message,
             "Only members of the given team may create tasks",
         )
+
+    def test_update_task(self):
+        task = factories.TaskFactory()
+        base_prize = task.base_points_prize + 5
+        old_desc = task.description
+        query = f"""
+        mutation {{
+            updateTask (input: {{
+                id: {task.id}
+                basePointsPrize: {base_prize}
+            }}) {{
+                errors {{
+                field
+                messages
+                }}
+                task {{
+                    id
+                    name
+                    description
+                    basePointsPrize
+                    team {{
+                        id
+                    }}
+                refreshInterval
+                isRecurring
+                }}
+            }}
+        }}
+        """
+        response = self.client.execute(query)
+        task.refresh_from_db()
+        assert not response.errors
+        assert not response.data["updateTask"]["errors"]
+        self.assertEqual(
+            base_prize, response.data["updateTask"]["task"]["basePointsPrize"]
+        )
+        self.assertEqual(base_prize, task.base_points_prize)
+        self.assertEqual(base_prize, task.base_points_prize)
+        self.assertEqual(old_desc, response.data["updateTask"]["task"]["description"])
+
+    def test_delete_task(self):
+        task = factories.TaskFactory()
+        old_desc = task.description
+        self.assertTrue(task.active)
+        query = f"""
+        mutation {{
+            deleteTask (id: {task.id}) {{
+                errors {{
+                field
+                messages
+                }}
+                task {{
+                    id
+                    name
+                    description
+                    basePointsPrize
+                    team {{
+                        id
+                    }}
+                refreshInterval
+                isRecurring
+                }}
+            }}
+        }}
+        """
+        mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+            response = self.client.execute(query)
+        task.refresh_from_db()
+        assert not response.errors
+        assert not response.data["deleteTask"]["errors"]
+        self.assertEqual(str(task.id), response.data["deleteTask"]["task"]["id"])
+        self.assertEqual(old_desc, task.description)
+        self.assertFalse(task.active)
+        self.assertEqual(mocked, task.deleted_at)
 
     @parameterized.expand(["true", "false"])
     def test_tasks_query(self, only_active):
@@ -284,6 +359,52 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         active_instance = task_instances.filter(completed=False).first()
         self.assertTrue(active_instance.active)
         self.assertEqual(mocked + refresh_interval, active_instance.active_from)
+
+    def test_revert_completion(self):
+        completion = factories.TaskInstanceCompletionFactory(
+            user_who_completed_task=self.member, task_instance__task__team=self.team
+        )
+        task = completion.task_instance.task
+
+        task_instances = TaskInstance.objects.filter(task=task)
+        self.assertEqual(len(list(task_instances.all())), 1)
+
+        query = f""" mutation {{revertTaskInstanceCompletion(id: {completion.id}) {{
+            errors {{
+            field
+            messages
+            }}
+            taskInstanceCompletion {{
+            userWhoCompletedTask {{
+                id
+                username
+            }}
+            taskInstance {{id, task {{id, name}}, activeFrom, completed, active}}
+            }}
+        }} }}"""
+        mocked = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        with mock.patch("django.utils.timezone.now", mock.Mock(return_value=mocked)):
+            response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertFalse(response.data["revertTaskInstanceCompletion"]["errors"])
+        self.assertEqual(
+            response.data["revertTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "userWhoCompletedTask"
+            ]["id"],
+            str(self.member.id),
+        )
+        self.assertEqual(
+            response.data["revertTaskInstanceCompletion"]["taskInstanceCompletion"][
+                "taskInstance"
+            ]["id"],
+            str(completion.task_instance.id),
+        )
+        completion.task_instance.refresh_from_db()
+        task.refresh_from_db()
+        task_instances = TaskInstance.objects.filter(task=task)
+        self.assertEqual(len(list(task_instances.all())), 1)
+        self.assertTrue(task.active)
+        self.assertIsNone(completion.task_instance.deleted_at)
 
     def test_user_points(self):
         completions = factories.TaskInstanceCompletionFactory.create_batch(
