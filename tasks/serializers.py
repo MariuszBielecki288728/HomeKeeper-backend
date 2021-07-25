@@ -38,8 +38,6 @@ class TaskInstanceCompletionSerializer(serializers.ModelSerializer):
         Team.check_membership(
             self.context["request"].user.id, task_instance.task.team.id
         )
-        if task_instance.completed or task_instance.deleted_at:
-            raise GraphQLError("This task instance is already completed or deleted")
         return data
 
     def create(self, validated_data):
