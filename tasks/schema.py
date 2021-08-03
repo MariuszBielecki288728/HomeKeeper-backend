@@ -36,10 +36,19 @@ class TaskType(DjangoObjectType):
 
 class TaskInstanceType(DjangoObjectType):
     active = graphene.Field(graphene.Boolean())
+    current_prize = graphene.Field(graphene.Int())
 
     class Meta:
         model = TaskInstance
-        fields = ("id", "task", "active_from", "completed", "active")
+        fields = (
+            "id",
+            "task",
+            "active_from",
+            "completed",
+            "active",
+            "deleted_at",
+            "current_prize",
+        )
 
 
 class TaskInstanceCompletionType(DjangoObjectType):
