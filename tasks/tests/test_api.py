@@ -70,6 +70,7 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
             Task(name="2", team=self.team, base_points_prize=10),
             Task(name="3", team=self.team, base_points_prize=10),
         ]
+
         for t in self.tasks:
             t.save()
 
@@ -174,6 +175,40 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertEqual(
             response.data["taskInstances"][1]["task"]["team"]["id"],
             str(self.tasks[1].team.id),
+        )
+
+    def test_task_inactive_instances_query(self):
+
+        completed_fourth_task = factories.TaskFactory(team=self.team)
+        task_instance = TaskInstance.objects.get(task__id=completed_fourth_task.id)
+        task_instance.completed = True
+        task_instance.save()
+
+        query = f"""query {{
+            taskInstances(teamId: {self.team.id}, onlyActive: false) {{
+                id
+                active
+                activeFrom
+                task {{
+                    id
+                    name
+                    team {{
+                        id
+                    }}
+                }}
+            }}
+        }}"""
+        response = self.client.execute(query)
+        self.assertFalse(response.errors)
+        self.assertEqual(len(response.data["taskInstances"]), 4)
+        self.assertEqual(response.data["taskInstances"][3]["active"], False)
+        self.assertEqual(
+            response.data["taskInstances"][3]["task"]["name"],
+            completed_fourth_task.name,
+        )
+        self.assertEqual(
+            response.data["taskInstances"][3]["task"]["team"]["id"],
+            str(completed_fourth_task.team.id),
         )
 
     @parameterized.expand(["true", "false"])
