@@ -441,6 +441,50 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertTrue(task.active)
         self.assertIsNone(completion.task_instance.deleted_at)
 
+    def test_list_completions(self):
+        completion1_date = datetime.datetime(2018, 4, 4, 0, 0, 0, tzinfo=pytz.utc)
+        completion1 = factories.TaskInstanceCompletionFactory(
+            user_who_completed_task=self.member,
+            task_instance__task__team=self.team,
+            created_at=completion1_date,
+        )
+        completion2_date = datetime.datetime(2018, 4, 16, 0, 0, 0, tzinfo=pytz.utc)
+        completion2 = factories.TaskInstanceCompletionFactory(
+            user_who_completed_task=self.user,
+            task_instance__task__team=self.team,
+            created_at=completion2_date,
+        )
+        completion3_date = datetime.datetime(2018, 5, 17, 0, 0, 0, tzinfo=pytz.utc)
+        deleted_completion_3 = factories.TaskInstanceCompletionFactory(
+            user_who_completed_task=self.user,
+            task_instance__task__team=self.team,
+            created_at=completion3_date,
+        )
+        deleted_completion_3.delete()
+
+        def make_query(only_active: str):
+            return f"""{{
+                completions(teamId: {self.team.id}, onlyActive: {only_active}) {{
+                    id
+                    createdAt
+                    pointsGranted
+                    active
+                }}
+            }}"""
+
+        response = self.client.execute(make_query("false"))
+        self.assertFalse(response.errors)
+        self.assertEqual(len(response.data["completions"]), 3)
+        self.assertEqual(
+            response.data["completions"][0]["id"], str(deleted_completion_3.id)
+        )
+        self.assertEqual(response.data["completions"][0]["active"], False)
+        self.assertEqual(response.data["completions"][1]["id"], str(completion2.id))
+        self.assertEqual(response.data["completions"][2]["id"], str(completion1.id))
+        response = self.client.execute(make_query("true"))
+        self.assertFalse(response.errors)
+        self.assertEqual(len(response.data["completions"]), 2)
+
     def test_user_points(self):
         completions = factories.TaskInstanceCompletionFactory.create_batch(
             10,

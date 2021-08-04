@@ -52,9 +52,19 @@ class TaskInstanceType(DjangoObjectType):
 
 
 class TaskInstanceCompletionType(DjangoObjectType):
+    active = graphene.Field(graphene.Boolean())
+
     class Meta:
         model = TaskInstanceCompletion
-        fields = "__all__"
+        fields = (
+            "id",
+            "task_instance",
+            "user_who_completed_task",
+            "points_granted",
+            "active",
+            "created_at",
+            "deleted_at",
+        )
 
 
 class TaskSerializerMutation(
@@ -120,6 +130,7 @@ class Query(graphene.ObjectType):
     completions = graphene.Field(
         graphene.List(TaskInstanceCompletionType),
         team_id=graphene.Int(required=True),
+        only_active=graphene.Boolean(default_value=False),
         description="Lists history of TaskInsance completions in the given team.",
     )
     user_points = graphene.Field(
@@ -172,6 +183,19 @@ class Query(graphene.ObjectType):
             [t for t in task_instances.all() if t.active]
             if only_active
             else task_instances
+        )
+
+    def resolve_completions(
+        self, info: GraphQLResolveInfo, team_id: int, only_active: bool = False
+    ):
+        task_completions = TaskInstanceCompletion.objects.filter(
+            task_instance__task__team=team_id
+        ).order_by("-created_at")
+
+        return (
+            [t for t in task_completions.all() if t.active]
+            if only_active
+            else task_completions
         )
 
     def resolve_user_points(
