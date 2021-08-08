@@ -28,7 +28,13 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-ALLOWED_HOSTS = ["0.0.0.0", "192.168.1.21", "192.168.1.25", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    "0.0.0.0",
+    "192.168.1.21",
+    "192.168.1.25",
+    "127.0.0.1",
+    "homekeeper-backend.herokuapp.com",
+]
 
 
 # Application definition
