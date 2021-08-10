@@ -31,7 +31,6 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     "127.0.0.1",
     ".localhost",
-    "homekeeper-backend.herokuapp.com",
 ]
 
 allowed_host = os.environ.get("DJANGO_ALLOWED_HOST")
