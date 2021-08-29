@@ -72,6 +72,14 @@ class TaskSerializerMutation(
 ):
     task = graphene.Field(TaskType)
 
+    @classmethod
+    @login_required
+    def delete(cls, root, info, **kwargs):
+        if "id" in kwargs:
+            task = Task.objects.filter(pk=kwargs.get("id")).first()
+            Team.check_membership(info.context.user.id, task.team.id)
+        return super().delete(root, info, **kwargs)
+
     class Meta:
         description = "DRF serializer based Mutation for Tasks."
         serializer_class = TaskSerializer
@@ -91,6 +99,18 @@ class TaskInstanceCompletionSerializerMutation(
     AuthDjangoSerializerMutationMixin, DjangoSerializerMutation
 ):
     taskInstanceCompletion = graphene.Field(TaskInstanceCompletionType)
+
+    @classmethod
+    @login_required
+    def delete(cls, root, info, **kwargs):
+        if "id" in kwargs:
+            completion = TaskInstanceCompletion.objects.filter(
+                pk=kwargs.get("id")
+            ).first()
+            Team.check_membership(
+                info.context.user.id, completion.task_instance.task.team.id
+            )
+        return super().delete(root, info, **kwargs)
 
     class Meta:
         description = "DRF serializer based Mutation for TaskInstanceCompletions."
