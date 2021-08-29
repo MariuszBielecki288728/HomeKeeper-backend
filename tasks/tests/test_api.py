@@ -172,7 +172,7 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         self.assertEqual(old_desc, response.data["updateTask"]["task"]["description"])
 
     def test_delete_task(self):
-        task = factories.TaskFactory()
+        task = factories.TaskFactory(team=self.team)
         old_desc = task.description
         self.assertTrue(task.active)
         query = f"""
