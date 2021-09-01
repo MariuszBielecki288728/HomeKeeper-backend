@@ -164,6 +164,49 @@ class TaskTestCase(GraphQLTestCase, JSONWebTokenTestCase):
         task.refresh_from_db()
         assert not response.errors
         assert not response.data["updateTask"]["errors"]
+        assert task.team
+        self.assertEqual(
+            base_prize, response.data["updateTask"]["task"]["basePointsPrize"]
+        )
+        self.assertEqual(base_prize, task.base_points_prize)
+        self.assertEqual(base_prize, task.base_points_prize)
+        self.assertEqual(old_desc, response.data["updateTask"]["task"]["description"])
+
+    def test_update_task_with_nulls(self):
+        task = factories.TaskFactory()
+        base_prize = task.base_points_prize + 5
+        old_desc = task.description
+        query = f"""
+        mutation {{
+            updateTask (input: {{
+                id: {task.id}
+                basePointsPrize: {base_prize}
+                team: null
+                description: null
+            }}) {{
+                errors {{
+                field
+                messages
+                }}
+                task {{
+                    id
+                    name
+                    description
+                    basePointsPrize
+                    team {{
+                        id
+                    }}
+                refreshInterval
+                isRecurring
+                }}
+            }}
+        }}
+        """
+        response = self.client.execute(query)
+        task.refresh_from_db()
+        assert not response.errors
+        assert not response.data["updateTask"]["errors"]
+        assert task.team
         self.assertEqual(
             base_prize, response.data["updateTask"]["task"]["basePointsPrize"]
         )

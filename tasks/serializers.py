@@ -15,7 +15,7 @@ class TaskSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate(self, data):
-        if self.instance is not None and data["team"] is not None:
+        if self.instance is not None and data.get("team") is not None:
             raise GraphQLError("Can't change team on already existing task")
         if self.instance is not None:
             return data
