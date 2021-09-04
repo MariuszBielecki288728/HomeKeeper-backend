@@ -59,11 +59,6 @@ class UserFactoryNoSignals(UserFactory):
 
 
 class TrackingFieldsMixinFactory(factory.django.DjangoModelFactory):
-    """
-    Note: auto_now_add overwrites created_at value.
-          It should be improved in the future.
-    """
-
     class Meta:
         model = TrackingFieldsMixin
         abstract = True

@@ -218,6 +218,11 @@ class TaskInstanceCompletionSignalsTestCase(TestCase):
         now = timezone.now()
         with mock.patch("common.models.timezone.now", mock.Mock(return_value=now)):
             completion.delete()
+
+        with self.assertRaises(RuntimeError) as context:
+            completion.delete()
+        self.assertTrue("is already deleted" in str(context.exception))
+
         completion.refresh_from_db()
         task_instance.refresh_from_db()
 
@@ -351,3 +356,22 @@ class TaskInstanceCompletionSignalsTestCase(TestCase):
             TaskInstanceCompletion.count_user_points(self.member.id, self.team.id),
             second_completion.points_granted,
         )
+
+    def test_completing_task_twice(self):
+        task = factories.TaskFactoryNoSignals(
+            team=self.team,
+            is_recurring=True,
+            refresh_interval=datetime.timedelta(days=5),
+        )
+        task_instance = factories.TaskInstanceFactory(
+            task=task, active_from=task.created_at
+        )
+
+        factories.TaskInstanceCompletionFactory(
+            task_instance=task_instance, user_who_completed_task=self.member
+        )
+        with self.assertRaises(RuntimeError) as context:
+            factories.TaskInstanceCompletionFactory(
+                task_instance=task_instance, user_who_completed_task=self.member
+            )
+        self.assertTrue("TaskInstance is already completed" in str(context.exception))

@@ -25,6 +25,14 @@ def update_task_instance_on_completion(
     the completed task_instance was active from.
     """
     if created:
+        list(
+            TaskInstance.objects.filter(
+                id=instance.task_instance.id
+            ).select_for_update()
+        )
+        instance.task_instance.refresh_from_db()
+        if instance.task_instance.completed is True:
+            raise RuntimeError("TaskInstance is already completed")
         instance.task_instance.completed = True
         instance.task_instance.save()
         if (
