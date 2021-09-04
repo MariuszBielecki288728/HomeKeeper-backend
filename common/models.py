@@ -1,4 +1,5 @@
 from django.db import models
+from django.db import transaction
 from django.conf import settings
 from django.utils import timezone
 
@@ -18,8 +19,14 @@ class TrackingFieldsMixin(models.Model):
         via object manager or querysets! If needed, it may be improved in the future:
         https://adriennedomingus.com/blog/soft-deletion-in-django
         """
-        self.deleted_at = timezone.now()
-        self.save()
+
+        with transaction.atomic():
+            list(self.__class__.objects.filter(id=self.id).select_for_update())
+            self.refresh_from_db()
+            if self.deleted_at is not None:
+                raise RuntimeError(f"{self} is already deleted")
+            self.deleted_at = timezone.now()
+            self.save()
 
     @property
     def active(self):
