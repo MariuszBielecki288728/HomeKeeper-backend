@@ -3,7 +3,6 @@ from django.db import transaction
 from django.dispatch import receiver
 from django.utils import timezone
 
-
 from tasks.models import Task, TaskInstance, TaskInstanceCompletion
 
 
