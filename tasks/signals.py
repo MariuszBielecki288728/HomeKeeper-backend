@@ -1,6 +1,8 @@
 from django.db.models.signals import post_save
+from django.db import transaction
 from django.dispatch import receiver
 from django.utils import timezone
+
 
 from tasks.models import Task, TaskInstance, TaskInstanceCompletion
 
@@ -30,9 +32,10 @@ def update_task_instance_on_completion(
                 id=instance.task_instance.id
             ).select_for_update()
         )
-        instance.task_instance.refresh_from_db()
-        if instance.task_instance.completed is True:
-            raise RuntimeError("TaskInstance is already completed")
+        with transaction.atomic():
+            instance.task_instance.refresh_from_db()
+            if instance.task_instance.completed is True:
+                raise RuntimeError("TaskInstance is already completed")
         instance.task_instance.completed = True
         instance.task_instance.save()
         if (
