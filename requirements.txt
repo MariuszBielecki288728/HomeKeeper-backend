@@ -12,7 +12,7 @@ django-stubs~=1.8.0
 graphene-stubs==0.15
 
 factory-boy~=3.2.0
-Faker~=8.12.1
+Faker~=8.12.2
 parameterized~=0.8.1
 coverage~=5.5
 
