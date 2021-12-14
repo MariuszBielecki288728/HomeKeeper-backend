@@ -14,7 +14,7 @@ graphene-stubs==0.15
 factory-boy~=3.2.1
 Faker~=10.0.0
 parameterized~=0.8.1
-coverage~=6.1
+coverage~=6.2
 
 # Deployment
 gunicorn~=20.1.0
