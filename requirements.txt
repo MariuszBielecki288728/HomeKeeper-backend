@@ -1,5 +1,5 @@
 Django~=3.2
-Django-filter~=2.4.0
+Django-filter~=21.1
 django-graphql-jwt~=0.3.4
 djangorestframework~=3.13.1
 graphene~=3.0b7
