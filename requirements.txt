@@ -1,7 +1,7 @@
 Django~=3.2
 Django-filter~=2.4.0
 django-graphql-jwt~=0.3.4
-djangorestframework~=3.12.4
+djangorestframework~=3.13.1
 graphene~=3.0b7
 graphene-django~=3.0.0b7
 graphene-django-extras~=0.5.2
@@ -12,7 +12,7 @@ django-stubs~=1.9.0
 graphene-stubs==0.15
 
 factory-boy~=3.2.1
-Faker~=10.0.0
+Faker~=11.3.0
 parameterized~=0.8.1
 coverage~=6.2
 
