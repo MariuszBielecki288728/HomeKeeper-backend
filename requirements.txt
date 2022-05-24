@@ -12,11 +12,11 @@ django-stubs~=1.9.0
 graphene-stubs==0.15
 
 factory-boy~=3.2.1
-Faker~=10.0.0
+Faker~=13.11.1
 parameterized~=0.8.1
 coverage~=6.2
 
 # Deployment
 gunicorn~=20.1.0
 dj-database-url==0.5.0
-whitenoise~=5.3.0
+whitenoise~=6.1.0
