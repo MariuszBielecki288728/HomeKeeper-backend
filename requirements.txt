@@ -8,7 +8,7 @@ graphene-django-extras~=0.5.2
 psycopg2-binary~=2.9.2
 
 mypy==0.950
-django-stubs~=1.9.0
+django-stubs~=1.13.2
 graphene-stubs==0.15
 
 factory-boy~=3.2.1
