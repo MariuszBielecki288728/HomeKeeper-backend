@@ -1,7 +1,14 @@
 [tool.poetry]
 authors = ["Mariusz Bielecki <mariuszbielecki01@gmail.com>"]
 description = "A Django backend for HomeKeeper"
-name = "homekeeper-backend"
+name = "homekeeper"
+packages = [
+  {include = "homekeeper"},
+  {include = "users"},
+  {include = "teams"},
+  {include = "tasks"},
+  {include = "common"},
+]
 readme = "README.md"
 version = "1.0.0"
 
