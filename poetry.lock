@@ -256,14 +256,14 @@ python-dateutil = ">=2.4"
 
 [[package]]
 name = "graphene"
-version = "3.2.1"
+version = "3.2.2"
 description = "GraphQL Framework for Python"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "graphene-3.2.1-py2.py3-none-any.whl", hash = "sha256:2ef689f514ba9e65e88961798cf4c637ca580e541168f9aee2ffbe21fd46f388"},
-    {file = "graphene-3.2.1.tar.gz", hash = "sha256:722243a9da2caeab703b1af9ec0deec602589c97035f86c486106a52d0c67082"},
+    {file = "graphene-3.2.2-py2.py3-none-any.whl", hash = "sha256:753de13948cbf42e32cc87fb533167c88907066eb984251fdbb006c0aab8da00"},
+    {file = "graphene-3.2.2.tar.gz", hash = "sha256:5b03e72770dc901f40be55784058d6bb1d952a49eb819a4a085962d5e1cf5fcf"},
 ]
 
 [package.dependencies]
@@ -718,4 +718,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fe6ba0bf3a5c096cce217ad2544786e17e8ea6427d46dc269dd6005fa765f6a0"
+content-hash = "239e64ce95b8587115c7279837548df1f64c47e580b8bf36d2986affec70947a"
