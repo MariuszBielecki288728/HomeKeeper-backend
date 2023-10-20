@@ -160,36 +160,36 @@ PyJWT = ">=2,<3"
 
 [[package]]
 name = "django-stubs"
-version = "4.2.0"
+version = "4.2.4"
 description = "Mypy stubs for Django"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "django-stubs-4.2.0.tar.gz", hash = "sha256:93baff824f0a056e71036b423b942a74f07b909e45e3fa38185b910f597c5c08"},
-    {file = "django_stubs-4.2.0-py3-none-any.whl", hash = "sha256:d2c671989efb3f7b0fa91e461909ad5a5a52155fe7fe6d1f2058cb88e3afb123"},
+    {file = "django-stubs-4.2.4.tar.gz", hash = "sha256:7d4a132c381519815e865c27a89eca41bcbd06056832507224816a43d75c601c"},
+    {file = "django_stubs-4.2.4-py3-none-any.whl", hash = "sha256:834b60fd81510cce6b56c1c6c28bec3c504a418bc90ff7d0063fabe8ab9a7868"},
 ]
 
 [package.dependencies]
 django = "*"
-django-stubs-ext = ">=4.2.0"
-mypy = ">=0.980"
+django-stubs-ext = ">=4.2.2"
+mypy = ">=1.0.0"
 tomli = {version = "*", markers = "python_version < \"3.11\""}
 types-pytz = "*"
 types-PyYAML = "*"
 typing-extensions = "*"
 
 [package.extras]
-compatible-mypy = ["mypy (>=1.2.0,<1.3)"]
+compatible-mypy = ["mypy (==1.5.*)"]
 
 [[package]]
 name = "django-stubs-ext"
-version = "4.2.0"
+version = "4.2.2"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "django-stubs-ext-4.2.0.tar.gz", hash = "sha256:7789f0caeca7152fef07ad6b94dec7310a05d0b8dab77f7979e19db0037b5127"},
-    {file = "django_stubs_ext-4.2.0-py3-none-any.whl", hash = "sha256:55b2e3077f883e0131a7596f8ff8b19f8fc3ca325a3318ccacf5331acb2601e4"},
+    {file = "django-stubs-ext-4.2.2.tar.gz", hash = "sha256:c69d1cc46f1c4c3b7894b685a5022c29b2a36c7cfb52e23762eaf357ebfc2c98"},
+    {file = "django_stubs_ext-4.2.2-py3-none-any.whl", hash = "sha256:fdacc65a14d2d4b97334b58ff178a5853ec8c8c76cec406e417916ad67536ce4"},
 ]
 
 [package.dependencies]
@@ -674,4 +674,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "9559d9c25be38b3bf26d804234fd2ca81ec7593106a6da4221bd779b686f603a"
+content-hash = "b1d99ff88f65fb3aba7e61a705da85f3391e3967517fe0ffc5c3e95714d62c18"
