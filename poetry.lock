@@ -143,20 +143,24 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-graphql-jwt"
-version = "0.3.4"
+version = "0.4.0"
 description = "JSON Web Token for Django GraphQL."
 optional = false
-python-versions = ">=3.6,<4.0"
+python-versions = ">=3.6"
 files = [
-    {file = "django-graphql-jwt-0.3.4.tar.gz", hash = "sha256:654808417a1fa97e4d489766b61046fa8006f58dfad1c44cc3a37a9e4929203b"},
-    {file = "django_graphql_jwt-0.3.4-py3-none-any.whl", hash = "sha256:fb20194bda649b2b1b49049ef84d0e957851df485fba7f1901aace54ca328063"},
+    {file = "django_graphql_jwt-0.4.0-py3-none-any.whl", hash = "sha256:5823aa8ac9bf0b7a6e3b2febd029598b332c41fe9043d89900c116fcecd23f5e"},
+    {file = "django_graphql_jwt-0.4.0.tar.gz", hash = "sha256:537972519f0deeec7a0e4a306ddfed1fe385266ef61c9f78c54cd04ac01a171e"},
 ]
 
 [package.dependencies]
-Django = ">=2.0"
+django = ">=2.0"
 graphene = ">=2.1.5"
 graphene-django = ">=2.0.0"
-PyJWT = ">=2,<3"
+pyjwt = ">=2,<3"
+
+[package.extras]
+doc = ["sphinx"]
+test = ["black", "codecov", "cryptography", "flake8", "isort", "pytest", "pytest-cov", "pytest-django"]
 
 [[package]]
 name = "django-stubs"
@@ -674,4 +678,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "b1d99ff88f65fb3aba7e61a705da85f3391e3967517fe0ffc5c3e95714d62c18"
+content-hash = "a6f81ea5adf7ac49d2d8d0c3774c0ac2522e1d0d8c196dfaa280a1cc8f30e95c"
