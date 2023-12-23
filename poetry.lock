@@ -310,13 +310,13 @@ python-dateutil = ">=2.8.0,<3.0.0"
 
 [[package]]
 name = "graphene-stubs"
-version = "0.15"
+version = "0.16"
 description = "Graphene stubs and mypy plugin"
 optional = false
 python-versions = "*"
 files = [
-    {file = "graphene-stubs-0.15.tar.gz", hash = "sha256:d1a1b38c4f4f9f3b97438d9ec57c44ff115103504f0138f99374182f5ea57ca6"},
-    {file = "graphene_stubs-0.15-py3-none-any.whl", hash = "sha256:dfefc5f4bda5eccff3f0a976d804c2a972c631025894b43a48dccae8e78cad1f"},
+    {file = "graphene-stubs-0.16.tar.gz", hash = "sha256:9b8c2d1d4f5ceb8ed55bbc6b34af748f9264da147d8b1ff5f9de6f0e651bd5e8"},
+    {file = "graphene_stubs-0.16-py3-none-any.whl", hash = "sha256:7fae3ff663344db1b3ee5b187f054a1d018bb63c364c3624890fe02960c6affe"},
 ]
 
 [package.dependencies]
