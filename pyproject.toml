@@ -26,7 +26,7 @@ graphene-django-extras = "^1.0.0"
 psycopg2-binary = "^2.9.6"
 
 # Deployment
-dj-database-url = "^2.0.0"
+dj-database-url = "^2.1.0"
 gunicorn = "^20.1.0"
 whitenoise = "^6.4.0"
 
