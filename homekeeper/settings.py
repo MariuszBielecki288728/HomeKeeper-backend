@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "graphene_django",
-    "users",
+    "users.app.UsersConfig",
     "teams",
     "tasks",
     "common",
