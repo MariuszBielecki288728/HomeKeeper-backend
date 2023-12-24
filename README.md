@@ -17,7 +17,7 @@ Open your browser and go to [GraphiQL](http://localhost:8000/graphql/) - an inte
 You can also install the application locally and run tests:
 
 ```bash
-python3.9 -m venv ./venv/
+python3.12 -m venv ./venv/
 source ./venv/bin/activate
 pip install poetry
 poetry install
