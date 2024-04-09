@@ -21,7 +21,7 @@ django-graphql-jwt = "^0.4.0"
 django-stubs = "^4.2.7"
 djangorestframework = "^3.13.1"
 graphene = "^3.3"
-graphene-django = "^3.2.0"
+graphene-django = "^3.2.1"
 graphene-django-extras = "^1.0.0"
 psycopg2-binary = "^2.9.9"
 
