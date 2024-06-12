@@ -267,13 +267,13 @@ test = ["coveralls (>=3.3,<4)", "iso8601 (>=1,<2)", "mock (>=4,<5)", "pytest (>=
 
 [[package]]
 name = "graphene-django"
-version = "3.2.0"
+version = "3.2.2"
 description = "Graphene Django integration"
 optional = false
 python-versions = "*"
 files = [
-    {file = "graphene-django-3.2.0.tar.gz", hash = "sha256:9aca4a862f12912c2e611624bdbcf6b0f9bc7a41d240110a41bf95575a7bacab"},
-    {file = "graphene_django-3.2.0-py2.py3-none-any.whl", hash = "sha256:b553ecdc1cd7fd5b2d71de1a729c03ae117321763a90ed48a7fb4fdbf7f0d43f"},
+    {file = "graphene-django-3.2.2.tar.gz", hash = "sha256:059ccf25d9a5159f28d7ebf1a648c993ab34deb064e80b70ca096aa22a609556"},
+    {file = "graphene_django-3.2.2-py2.py3-none-any.whl", hash = "sha256:0fd95c8c1cbe77ae2a5940045ce276803c3acbf200a156731e0c730f2776ae2c"},
 ]
 
 [package.dependencies]
@@ -681,4 +681,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "0120ec819262967eee94d572a3bcab96be3ca57d3c167d0b64f419c76069bef9"
+content-hash = "c19122318e8bed684e5a4cd63da4ceba1b73e6df05eb673809ae897b8ee3c271"
