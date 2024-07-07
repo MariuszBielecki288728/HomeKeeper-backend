@@ -54,7 +54,7 @@ jobs:
       - name: Generate GraphQL SDL file
         run: python manage.py dumpschema
       - name: Upload schema
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: schema
           path: schema.graphql
