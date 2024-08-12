@@ -27,7 +27,7 @@ psycopg2-binary = "^2.9.9"
 
 # Deployment
 dj-database-url = "^2.1.0"
-gunicorn = "^21.2.0"
+gunicorn = "^23.0.0"
 typing_extensions = "^4.11.0"
 whitenoise = "^6.6.0"
 
