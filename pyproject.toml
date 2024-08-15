@@ -28,7 +28,7 @@ psycopg2-binary = "^2.9.9"
 # Deployment
 dj-database-url = "^2.1.0"
 gunicorn = "^23.0.0"
-typing_extensions = "^4.11.0"
+typing_extensions = "^4.12.2"
 whitenoise = "^6.7.0"
 
 [tool.poetry.dev-dependencies]
