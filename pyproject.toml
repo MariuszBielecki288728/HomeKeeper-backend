@@ -15,7 +15,7 @@ version = "1.0.0"
 [tool.poetry.dependencies]
 python = "^3.12"
 
-django = "^5.0.8"
+django = "^5.1"
 django-filter = "22.1"
 django-graphql-jwt = "^0.4.0"
 django-stubs = "^5.0.2"
